@@ -10,8 +10,8 @@
 #include <stdlib.h> // exit
 #include <math.h> // sqrt
 
-#include "io.cpp"
-#include "shaders.cpp"
+#include "io.c"
+#include "shaders.c"
 
 GLuint getImageBuffer(int nx, int ny) {
     GLuint texture;
@@ -24,10 +24,10 @@ GLuint getImageBuffer(int nx, int ny) {
     return texture;
 }
 
-struct ShaderData {
+typedef struct {
     float lookAt[3][3];
     float fov;
-};
+} ShaderData;
 
 GLuint setupSSBO(GLuint programId) {
     hmm_vec3 eye = HMM_Vec3(0, 3, -20);
@@ -37,7 +37,7 @@ GLuint setupSSBO(GLuint programId) {
     ShaderData shader_data;
     for(int i=0; i<3; i++) {
         for(int j=0; j<3; j++) {
-            shader_data.lookAt[i][j] = lookAt[i][j];
+            shader_data.lookAt[i][j] = lookAt.Elements[i][j];
         }
     }
     shader_data.fov = 55.0f;
@@ -53,12 +53,12 @@ GLuint setupSSBO(GLuint programId) {
 
 void writePNG(const int nx, const int ny, const float* imgData) {
     const int size = nx*ny*3;
-    char* pixels = new char[size];
+    char* pixels = malloc(sizeof(char)*size);
     for(int i=0; i<size; i++) {
         pixels[i] = 255.99 * sqrt(imgData[i]);
     }
     stbi_write_png("image.png", nx, ny, 3, pixels, 3*nx);
-    delete[] pixels;
+    free(pixels);
 }
 
 int main() {
@@ -94,13 +94,13 @@ int main() {
     glDispatchCompute(nx/32, ny/32, 1); ck();
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); ck();
 
-    float* imgData = new float[nx*ny*3];
+    float* imgData = malloc(sizeof(float)*nx*ny*3);
     glBindTexture(GL_TEXTURE_2D, textureId); ck();
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, (GLvoid*)imgData); ck();
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     writePNG(nx, ny, imgData);
 
-    delete[] imgData;
+    free(imgData);
     glDeleteShader(shaderId);
     glDeleteProgram(programId);
     glfwTerminate();
