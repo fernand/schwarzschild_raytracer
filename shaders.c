@@ -1,10 +1,10 @@
 void ck() {
     GLenum err = glGetError();
-    if(err == GL_NO_ERROR) {
+    if (err == GL_NO_ERROR) {
         return;
     }
     char* msg;
-    switch(err) {
+    switch (err) {
         case GL_INVALID_ENUM: msg = "INVALID_ENUM"; break;
         case GL_INVALID_VALUE: msg = "INVALID_VALUE"; break;
         case GL_INVALID_OPERATION: msg = "INVALID_OPERATION"; break;
@@ -29,7 +29,7 @@ GLuint shaderFromSource(char* name, char* path) {
 
     GLint compileStatus;
     glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compileStatus); ck();
-    if(compileStatus != GL_TRUE) {
+    if (compileStatus != GL_TRUE) {
         char infoLog[512];
         glGetShaderInfoLog(shaderId, 512, NULL, infoLog); ck();
         printf("Shader %s compilation failed: %s", name, infoLog);
@@ -45,7 +45,7 @@ GLuint shaderProgramFromShader(GLuint shaderId) {
     glLinkProgram(programId); ck();
     GLint programStatus;
     glGetProgramiv(programId, GL_LINK_STATUS, &programStatus); ck();
-    if(programStatus != 1) {
+    if (programStatus != 1) {
         char infoLog[512];
         glGetProgramInfoLog(programId, 512, NULL, infoLog); ck();
         printf("Shader program link failed: %s\n", infoLog); ck();
