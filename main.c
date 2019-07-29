@@ -68,13 +68,12 @@ GLuint createAndBindTextureFromImage(const GLuint texUnit, const int nx, const i
 }
 
 typedef struct {
-    int nx;
-    int ny;
-//    float eye[3];
-    float lookAt[3][3];
-    float tanFov;
-    int xSkyMap;
-    int ySkyMap;
+    float nx;
+    float ny;
+    float xSkyMap;
+    float ySkyMap;
+    float eyeAndTanFov[4];
+    float lookAt[4][4];
 } ShaderData;
 
 GLuint createAndBindSSBO(GLuint programId, GLuint ssboLocation, int nx, int ny, int xSkyMap, int ySkyMap) {
@@ -83,22 +82,27 @@ GLuint createAndBindSSBO(GLuint programId, GLuint ssboLocation, int nx, int ny, 
     hmm_vec3 up = HMM_Vec3(-0.3, 1, 0);
     mat3 lookAt = getLookAt(eye, center, up);
     ShaderData shader_data;
+    shader_data.nx = (float)nx;
+    shader_data.ny = (float)ny;
+    shader_data.xSkyMap = (float)xSkyMap;
+    shader_data.ySkyMap = (float)ySkyMap;
     for (int i=0; i<3; i++) {
-//        shader_data.eye[i] = eye.Elements[i];
-        for(int j=0; j<3; j++) {
+        shader_data.eyeAndTanFov[i] = eye.Elements[i];
+        for(int j=0; j<4; j++) {
             shader_data.lookAt[i][j] = lookAt.Elements[i][j];
         }
     }
-    shader_data.nx = nx;
-    shader_data.ny = ny;
-    shader_data.tanFov = tan(M_PI / 180.0f) * 55.0f;
-    shader_data.xSkyMap = xSkyMap;
-    shader_data.ySkyMap = ySkyMap;
+    for (int i=3; i<4; i++) {
+        shader_data.eyeAndTanFov[i] = 0tan(M_PI / 180.0f) * 55.0f;
+        for (int j=0; j<4; j++) {
+            shader_data.lookAt[i][j] = 0.0f;
+        }
+    }
 
     GLuint ssbo;
     glGenBuffers(1, &ssbo);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(shader_data), &shader_data, GL_STATIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(shader_data), &shader_data, GL_STATIC_DRAW); ck();
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssboLocation, ssbo);
     return ssbo;
