@@ -1,16 +1,16 @@
 #version 430
 layout(local_size_x = 32, local_size_y = 32) in;
-layout(rgba32f) uniform image2D pixels;
-layout(rgba32f) uniform image2D skyMap;
-layout(std430, binding = 2) buffer data
+layout(rgba32f, binding = 0) uniform image2D pixels;
+layout(rgba32f, binding = 1) uniform image2D skyMap;
+layout(std430, binding = 0) readonly buffer data
 {
-//    int nx;
-//    int ny;
+    int nx;
+    int ny;
 //    vec3 eye;
     mat3 lookAt;
-//    float tanFov;
-//    int xSkyMap;
-//    int ySkyMap;
+    float tanFov;
+    int xSkyMap;
+    int ySkyMap;
 };
 
 
@@ -22,7 +22,7 @@ const float SKY_SPHERE_RADIUS = 30.0;
 
 void main() {
     vec4 color = imageLoad(skyMap, ivec2(gl_GlobalInvocationID.xy));
-//    color = vec4(lookAt[0][0], -lookAt[0][1], lookAt[0][2], 1.0);
+//    vec4 color = vec4(lookAt[0][0], -lookAt[0][1], lookAt[0][2], 1.0);
 //    vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
 //    uint x = gl_GlobalInvocationID.x;
 //    uint y = gl_GlobalInvocationID.y;
