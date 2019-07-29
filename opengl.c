@@ -40,14 +40,21 @@ GLuint createAndBindTextureFromImage(const GLuint texUnit, const int nx, const i
     return texture;
 }
 
-GLuint createAndBindSSBO(GLuint programId, GLuint ssboLocation, size_t buffer_size, void *buffer) {
+GLuint createAndBindSSBO(GLuint ssboLocation, size_t bufferSize, void *buffer) {
     GLuint ssbo;
     glGenBuffers(1, &ssbo);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, buffer_size, buffer, GL_STATIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, buffer, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssboLocation, ssbo);
     return ssbo;
+}
+
+void updateSSBO(GLuint ssbo, size_t bufferSize, void *buffer) {
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+    GLvoid *p = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+    memcpy(p, buffer, bufferSize);
+    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 }
 
 GLuint shaderFromSource(char* name, char* path) {

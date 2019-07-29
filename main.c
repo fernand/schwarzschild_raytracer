@@ -25,30 +25,29 @@ typedef struct {
     float lookAt[4][4];
 } ShaderData;
 
-ShaderData setupData(int nx, int ny, int xSkyMap, int ySkyMap) {
-    hmm_vec3 eye = HMM_Vec3(0, 0, -20);
+setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap,
+        hmm_vec3 eye,
+        ShaderData *shader_data) {
     hmm_vec3 center = HMM_Vec3(0, 0, 0);
     hmm_vec3 up = HMM_Vec3(-0.3, 1, 0);
     mat3 lookAt = getLookAt(eye, center, up);
-    ShaderData shader_data;
-    shader_data.nx = (float)nx;
-    shader_data.ny = (float)ny;
-    shader_data.xSkyMap = (float)xSkyMap;
-    shader_data.ySkyMap = (float)ySkyMap;
+    shader_data->nx = (float)nx;
+    shader_data->ny = (float)ny;
+    shader_data->xSkyMap = (float)xSkyMap;
+    shader_data->ySkyMap = (float)ySkyMap;
     for (int i=0; i<3; i++) {
-        shader_data.eyeAndTanFov[i] = eye.Elements[i];
+        shader_data->eyeAndTanFov[i] = eye.Elements[i];
         for(int j=0; j<3; j++) {
-            shader_data.lookAt[i][j] = lookAt.Elements[i][j];
+            shader_data->lookAt[i][j] = lookAt.Elements[i][j];
         }
-        shader_data.lookAt[i][3] = 0.0f;
+        shader_data->lookAt[i][3] = 0.0f;
     }
     for (int i=3; i<4; i++) {
-        shader_data.eyeAndTanFov[i] = tan(M_PI / 180.0f) * 55.0f;
+        shader_data->eyeAndTanFov[i] = tan(M_PI / 180.0f) * 55.0f;
         for (int j=0; j<4; j++) {
-            shader_data.lookAt[i][j] = 0.0f;
+            shader_data->lookAt[i][j] = 0.0f;
         }
     }
-    return shader_data;
 }
 
 main() {
@@ -84,8 +83,11 @@ main() {
     GLuint programId = shaderProgramFromShader(shaderId);
     glUseProgram(programId);
 
-    ShaderData shader_data = setupData(nx, ny, xSkyMap, ySkyMap);
-    GLuint ssbo = createAndBindSSBO(programId, 0, sizeof(shader_data), &shader_data);
+    hmm_vec3 eye = HMM_Vec3(0, 0, -20);
+    ShaderData shaderData;
+    setupShaderData(nx, ny, xSkyMap, ySkyMap, eye, &shaderData);
+    size_t shaderDataSize = sizeof(shaderData);
+    GLuint ssbo = createAndBindSSBO(0, sizeof(shaderData), &shaderData);
 
     GLuint fboId = 0;
     glGenFramebuffers(1, &fboId);
@@ -99,6 +101,8 @@ main() {
         glBlitFramebuffer(0, 0, nx, ny, 0, 0, nx, ny, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         glfwSwapBuffers(window);
         glfwPollEvents();
+        shaderData.eyeAndTanFov[2] += 0.1f;
+        updateSSBO(ssbo, shaderDataSize, &shaderData);
     }
 
     glDeleteFramebuffers(1, &fboId);
