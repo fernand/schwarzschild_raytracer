@@ -21,9 +21,6 @@ const float SKY_SPHERE_RADIUS = 30.0;
 const float SKY_R2 = 30.0 * 30.0;
 
 void main() {
-//    vec4 color = imageLoad(skyMap, ivec2(gl_GlobalInvocationID.xy));
-//    vec4 color = vec4(eyeAndTanFov.x, eyeAndTanFov.y/3.0, eyeAndTanFov.z / -20.0, 1.0);
-//    vec4 color = vec4(lookAt[2][0], lookAt[2][1], lookAt[2][2], 1.0);
     vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
     int xSkyMap = int(fxSkyMap);
     int ySkyMap = int(fySkyMap);
@@ -44,11 +41,10 @@ void main() {
     float h2 = dot(crossed, crossed);
 
     for (int i=0; i<NUM_ITER; i++) {
-        float stp = (sqrt(sqrNorm) / SKY_SPHERE_RADIUS) * STEP;
-        point += velocity * stp;
+        point += velocity * STEP;
         sqrNorm = dot(point, point);
         vec3 accel = POTENTIAL_COEF * h2 * point / pow(sqrNorm, 2.5);
-        velocity += accel * stp;
+        velocity += accel * STEP;
 
         if (sqrNorm > SKY_R2) {
             float phi = atan(point.y, point.x);

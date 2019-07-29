@@ -9,8 +9,9 @@
 #include "include/handmade_math.h"
 
 #include <stdio.h>
-#include <stdlib.h> // exit
+#include <stdlib.h>
 #include <math.h>
+#include <windows.h> // time
 
 #define M_PI 3.14159265358979323846f
 
@@ -18,6 +19,13 @@ typedef unsigned char u8;
 
 #include "io.c"
 #include "shaders.c"
+
+double getWallTime() {
+    LARGE_INTEGER time, freq;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&time);
+    return (double)time.QuadPart / freq.QuadPart;
+}
 
 typedef struct {
     float Elements[3][3];
@@ -113,7 +121,7 @@ void writePNG(const int nx, const int ny, const float *imgData) {
     const int size = nx*ny*3;
     u8 *pixels = malloc(sizeof(u8)*size);
     for (int i=0; i<size; i++) {
-        pixels[i] = 255.99 * sqrt(imgData[i]);
+        pixels[i] = 255.99 * imgData[i];
     }
     stbi_write_png("image.png", nx, ny, 3, pixels, 3*nx);
     free(pixels);
@@ -159,14 +167,18 @@ int main() {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fboId);
     glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, outputTextureId, 0);
     
-    while(1>0) {
+    while(!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
+        double t = getWallTime();
         glDispatchCompute(nx/32, ny/32, 1); ck();
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); ck();
+        printf("time: %f", getWallTime() - t);
         glBlitFramebuffer(0, 0, nx, ny, 0, 0, nx, ny, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         glfwSwapBuffers(window);
+        glfwPollEvents();
     }
 
+#if 0
     float *imgData = malloc(sizeof(float)*nx*ny*3);
     glBindTexture(GL_TEXTURE_2D, outputTextureId); ck();
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, (GLvoid*)imgData); ck();
@@ -174,6 +186,7 @@ int main() {
     writePNG(nx, ny, imgData);
 
     free(imgData);
+#endif
     stbi_image_free(skyMap);
     glDeleteTextures(1, &outputTextureId);
     glDeleteTextures(1, &skyMapTextureId);
