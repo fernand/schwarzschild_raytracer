@@ -107,5 +107,4 @@ main() {
     glDeleteShader(shaderId);
     glDeleteProgram(programId);
     glfwTerminate();
-    return 0;
 }
