@@ -61,7 +61,7 @@ GLuint createAndBindTextureFromImage(const GLuint texUnit, const int nx, const i
     glGenTextures(1, &texture); ck();
     glActiveTexture(GL_TEXTURE0 + texUnit);
     glBindTexture(GL_TEXTURE_2D, texture); ck();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); ck();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); ck();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, nx, ny, 0, GL_RGBA, GL_UNSIGNED_BYTE, data); ck();
     glBindImageTexture(texUnit, texture, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F); ck();
     return texture;
@@ -77,7 +77,7 @@ typedef struct {
 } ShaderData;
 
 GLuint createAndBindSSBO(GLuint programId, GLuint ssboLocation, int nx, int ny, int xSkyMap, int ySkyMap) {
-    hmm_vec3 eye = HMM_Vec3(0, 3, -20);
+    hmm_vec3 eye = HMM_Vec3(0, 0, -20);
     hmm_vec3 center = HMM_Vec3(0, 0, 0);
     hmm_vec3 up = HMM_Vec3(-0.3, 1, 0);
     mat3 lookAt = getLookAt(eye, center, up);
@@ -120,7 +120,7 @@ void writePNG(const int nx, const int ny, const float *imgData) {
 }
 
 int main() {
-    const int nx = 1024;
+    const int nx = 1920;
     const int ny = 1024;
 
     if (!glfwInit()) {
@@ -154,8 +154,18 @@ int main() {
 
     GLuint ssbo = createAndBindSSBO(programId, 0, nx, ny, xSkyMap, ySkyMap);
 
-    glDispatchCompute(nx/32, ny/32, 1); ck();
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); ck();
+    GLuint fboId = 0;
+    glGenFramebuffers(1, &fboId);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fboId);
+    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, outputTextureId, 0);
+    
+    while(1>0) {
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDispatchCompute(nx/32, ny/32, 1); ck();
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); ck();
+        glBlitFramebuffer(0, 0, nx, ny, 0, 0, nx, ny, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glfwSwapBuffers(window);
+    }
 
     float *imgData = malloc(sizeof(float)*nx*ny*3);
     glBindTexture(GL_TEXTURE_2D, outputTextureId); ck();
