@@ -3,8 +3,6 @@
 #include "include/GLFW/glfw3.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "include/stb_image.h"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "include/stb_image_write.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,16 +49,6 @@ ShaderData setupData(int nx, int ny, int xSkyMap, int ySkyMap) {
         }
     }
     return shader_data;
-}
-
-void writePNG(const int nx, const int ny, const float *imgData) {
-    const int size = nx*ny*3;
-    u8 *pixels = malloc(sizeof(u8)*size);
-    for (int i=0; i<size; i++) {
-        pixels[i] = 255.99 * imgData[i];
-    }
-    stbi_write_png("image.png", nx, ny, 3, pixels, 3*nx);
-    free(pixels);
 }
 
 main() {
@@ -113,15 +101,6 @@ main() {
         glfwPollEvents();
     }
 
-#if 0
-    float *imgData = malloc(sizeof(float)*nx*ny*3);
-    glBindTexture(GL_TEXTURE_2D, outputTextureId);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, (GLvoid*)imgData);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    writePNG(nx, ny, imgData);
-
-    free(imgData);
-#endif
     glDeleteFramebuffers(1, &fboId);
     glDeleteTextures(1, &outputTextureId);
     glDeleteTextures(1, &skyMapTextureId);
