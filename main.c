@@ -8,9 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stddef.h>
 #include <math.h>
-#include <windows.h> // time
 
 #define M_PI 3.14159265358979323846f
 
@@ -19,13 +17,6 @@ typedef unsigned char u8;
 #include "io.c"
 #include "math.c"
 #include "opengl.c"
-
-double getWallTime() {
-    LARGE_INTEGER time, freq;
-    QueryPerformanceFrequency(&freq);
-    QueryPerformanceCounter(&time);
-    return (double)time.QuadPart / freq.QuadPart;
-}
 
 typedef struct {
     float nx;
@@ -72,13 +63,13 @@ void writePNG(const int nx, const int ny, const float *imgData) {
     free(pixels);
 }
 
-int main() {
+main() {
     const int nx = 1920;
     const int ny = 1024;
 
     if (!glfwInit()) {
         printf("Could not init GLFW\n");
-        return -1;
+        exit(-1);
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -86,12 +77,12 @@ int main() {
     GLFWwindow* window = glfwCreateWindow(nx, ny, "Ray GL", NULL, NULL);
     if (!window) {
         printf("Could not init GLFW window\n");
-        return -1;
+        exit(-1);
     }
     glfwMakeContextCurrent(window);
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         printf("Could not init OpenGL context\n");
-        return -1;
+        exit(-1);
     }
 
     GLuint outputTextureId = createAndBindEmptyTexture(0, nx, ny);
@@ -115,10 +106,8 @@ int main() {
     
     while(!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
-        double t = getWallTime();
         glDispatchCompute(nx/32, ny/32, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-        printf("%f ", getWallTime() - t);
         glBlitFramebuffer(0, 0, nx, ny, 0, 0, nx, ny, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         glfwSwapBuffers(window);
         glfwPollEvents();

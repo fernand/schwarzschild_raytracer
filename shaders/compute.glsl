@@ -14,7 +14,7 @@ layout(std430, binding = 0) readonly buffer data
 
 const float PI = 3.1415926535897932384626433832795;
 const int NUM_ITER = 10000;
-const float STEP = 0.2;
+const float STEP = 0.01;
 const float POTENTIAL_COEF = -1.5;
 const float SKY_SPHERE_RADIUS = 30.0;
 const float SKY_R2 = 30.0 * 30.0;
