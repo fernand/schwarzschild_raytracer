@@ -7,7 +7,7 @@
         ],
         "executable": "C:\\Users\\Fernand\\Code\\sailing\\build\\main.exe",
         "inject": false,
-        "numQueuedFrames": 1,
+        "numQueuedFrames": 0,
         "options": {
             "allowFullscreen": true,
             "allowVSync": true,

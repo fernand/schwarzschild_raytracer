@@ -60,6 +60,10 @@ void main() {
             color = imageLoad(skyMap, ivec2(xSky, ySky));
             break;
         }
+        else if (sqrNorm < 1) {
+            color = vec4(0.0, 0.0, 0.0, 1.0);
+            break;
+        }
     }
     imageStore(pixels, ivec2(gl_GlobalInvocationID.xy), color);
 }
