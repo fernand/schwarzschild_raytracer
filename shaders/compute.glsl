@@ -14,9 +14,8 @@ layout(std430, binding = 0) readonly buffer data
 
 const float PI = 3.1415926535897932384626433832795;
 const int NUM_ITER = 10000;
-const float STEP = 0.01;
+const float STEP = 0.2;
 const float POTENTIAL_COEF = -1.5;
-const float SKY_SPHERE_RADIUS = 30.0;
 const float SKY_R2 = 30.0 * 30.0;
 
 void main() {
@@ -48,11 +47,11 @@ void main() {
         if (sqrNorm > SKY_R2) {
             float phi = atan(point.y, point.x);
             float theta = acos(point.z / length(point));
-            int xSky= int((phi / (2*PI)) * xSkyMap) % xSkyMap;
-            int ySky= int((theta / PI) * ySkyMap) % ySkyMap;
-            if (xSky< 0) { xSky = xSkyMap + xSky; }
-            if (ySky< 0) { ySky = ySkyMap + ySky; }
-            color = imageLoad(skyMap, ivec2(xSky, ySky));
+            int u = int((phi / (2*PI)) * xSkyMap);
+            int v = int((theta / PI) * ySkyMap);
+            if (u < 0) { u = u + xSkyMap; }
+            if (v < 0) { v = v + ySkyMap; }
+            color = imageLoad(skyMap, ivec2(u, v));
             break;
         }
         else if (sqrNorm < 1) {
