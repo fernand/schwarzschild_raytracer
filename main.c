@@ -88,12 +88,13 @@ GLuint createAndBindSSBO(GLuint programId, GLuint ssboLocation, int nx, int ny, 
     shader_data.ySkyMap = (float)ySkyMap;
     for (int i=0; i<3; i++) {
         shader_data.eyeAndTanFov[i] = eye.Elements[i];
-        for(int j=0; j<4; j++) {
+        for(int j=0; j<3; j++) {
             shader_data.lookAt[i][j] = lookAt.Elements[i][j];
         }
+        shader_data.lookAt[i][3] = 0.0f;
     }
     for (int i=3; i<4; i++) {
-        shader_data.eyeAndTanFov[i] = 0tan(M_PI / 180.0f) * 55.0f;
+        shader_data.eyeAndTanFov[i] = tan(M_PI / 180.0f) * 55.0f;
         for (int j=0; j<4; j++) {
             shader_data.lookAt[i][j] = 0.0f;
         }

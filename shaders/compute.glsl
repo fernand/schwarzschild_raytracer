@@ -18,11 +18,12 @@ const int NUM_ITER = 10000;
 const float STEP = 0.16;
 const float POTENTIAL_COEF = -1.5;
 const float SKY_SPHERE_RADIUS = 30.0;
+const float SKY_R2 = 30.0 * 30.0;
 
 void main() {
 //    vec4 color = imageLoad(skyMap, ivec2(gl_GlobalInvocationID.xy));
 //    vec4 color = vec4(eyeAndTanFov.x, eyeAndTanFov.y/3.0, eyeAndTanFov.z / -20.0, 1.0);
-//    vec4 color = vec4(lookAt[0][0], -lookAt[0][1], lookAt[0][2], 1.0);
+//    vec4 color = vec4(lookAt[2][0], lookAt[2][1], lookAt[2][2], 1.0);
     vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
     int xSkyMap = int(fxSkyMap);
     int ySkyMap = int(fySkyMap);
@@ -46,13 +47,12 @@ void main() {
         float stp = (sqrt(sqrNorm) / SKY_SPHERE_RADIUS) * STEP;
         point += velocity * stp;
         sqrNorm = dot(point, point);
-        vec3 accel = POTENTIAL_COEF * h2 * point / pow(dot(point, point), 2.5);
+        vec3 accel = POTENTIAL_COEF * h2 * point / pow(sqrNorm, 2.5);
         velocity += accel * stp;
 
-        float phi = atan(point.y, point.x);
-        float theta = acos(point.z / length(point));
-
-        if (sqrNorm > SKY_SPHERE_RADIUS) {
+        if (sqrNorm > SKY_R2) {
+            float phi = atan(point.y, point.x);
+            float theta = acos(point.z / length(point));
             int xSky= int((phi / (2*PI)) * xSkyMap) % xSkyMap;
             int ySky= int((theta / PI) * ySkyMap) % ySkyMap;
             if (xSky< 0) { xSky = xSkyMap + xSky; }
@@ -61,6 +61,5 @@ void main() {
             break;
         }
     }
-
     imageStore(pixels, ivec2(gl_GlobalInvocationID.xy), color);
 }
