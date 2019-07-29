@@ -149,7 +149,6 @@ int main() {
         return -1;
     }
 
-
     GLuint outputTextureId = createAndBindEmptyTexture(0, nx, ny);
 
     int xSkyMap, ySkyMap, nSkyMap;
