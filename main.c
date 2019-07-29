@@ -55,9 +55,9 @@ mat3 getLookAt(hmm_vec3 Eye, hmm_vec3 Center, hmm_vec3 Up) {
 
 GLuint createAndBindEmptyTexture(const GLuint texUnit, const int nx, const int ny) {
     GLuint texture;
-    glGenTextures(1, &texture); ck();
+    glGenTextures(1, &texture);
     glActiveTexture(GL_TEXTURE0 + texUnit);
-    glBindTexture(GL_TEXTURE_2D, texture); ck();
+    glBindTexture(GL_TEXTURE_2D, texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, nx, ny, 0, GL_RGBA, GL_FLOAT, NULL);
     glBindImageTexture(texUnit, texture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
@@ -66,12 +66,12 @@ GLuint createAndBindEmptyTexture(const GLuint texUnit, const int nx, const int n
 
 GLuint createAndBindTextureFromImage(const GLuint texUnit, const int nx, const int ny, const u8 *data) {
     GLuint texture;
-    glGenTextures(1, &texture); ck();
+    glGenTextures(1, &texture);
     glActiveTexture(GL_TEXTURE0 + texUnit);
-    glBindTexture(GL_TEXTURE_2D, texture); ck();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); ck();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, nx, ny, 0, GL_RGBA, GL_UNSIGNED_BYTE, data); ck();
-    glBindImageTexture(texUnit, texture, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F); ck();
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, nx, ny, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glBindImageTexture(texUnit, texture, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
     return texture;
 }
 
@@ -111,7 +111,7 @@ GLuint createAndBindSSBO(GLuint programId, GLuint ssboLocation, int nx, int ny, 
     GLuint ssbo;
     glGenBuffers(1, &ssbo);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(shader_data), &shader_data, GL_STATIC_DRAW); ck();
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(shader_data), &shader_data, GL_STATIC_DRAW);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssboLocation, ssbo);
     return ssbo;
@@ -154,6 +154,7 @@ int main() {
     int xSkyMap, ySkyMap, nSkyMap;
     u8 *skyMap = stbi_load("data/sky8k.jpg", &xSkyMap, &ySkyMap, &nSkyMap, STBI_rgb_alpha);
     GLuint skyMapTextureId = createAndBindTextureFromImage(1, xSkyMap, ySkyMap, skyMap);
+    stbi_image_free(skyMap);
 
     GLuint shaderId = shaderFromSource("rayTracer", "shaders/compute.glsl");
     GLuint programId = shaderProgramFromShader(shaderId);
@@ -169,9 +170,9 @@ int main() {
     while(!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
         double t = getWallTime();
-        glDispatchCompute(nx/32, ny/32, 1); ck();
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); ck();
-        printf("time: %f", getWallTime() - t);
+        glDispatchCompute(nx/32, ny/32, 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        printf("%f ", getWallTime() - t);
         glBlitFramebuffer(0, 0, nx, ny, 0, 0, nx, ny, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -179,14 +180,14 @@ int main() {
 
 #if 0
     float *imgData = malloc(sizeof(float)*nx*ny*3);
-    glBindTexture(GL_TEXTURE_2D, outputTextureId); ck();
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, (GLvoid*)imgData); ck();
+    glBindTexture(GL_TEXTURE_2D, outputTextureId);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, (GLvoid*)imgData);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     writePNG(nx, ny, imgData);
 
     free(imgData);
 #endif
-    stbi_image_free(skyMap);
+    glDeleteFramebuffers(1, &fboId);
     glDeleteTextures(1, &outputTextureId);
     glDeleteTextures(1, &skyMapTextureId);
     glDeleteShader(shaderId);

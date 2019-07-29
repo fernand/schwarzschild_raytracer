@@ -19,19 +19,19 @@ void ck() {
 }
 
 GLuint shaderFromSource(char* name, char* path) {
-    GLuint shaderId = glCreateShader(GL_COMPUTE_SHADER); ck();
+    GLuint shaderId = glCreateShader(GL_COMPUTE_SHADER);
     char source[10240];
     int len = 10240;
     getFileContents(path, source, &len);
     const GLchar* sourceAddr = &source[0];
-    glShaderSource(shaderId, 1, &sourceAddr, &len); ck();
-    glCompileShader(shaderId); ck();
+    glShaderSource(shaderId, 1, &sourceAddr, &len);
+    glCompileShader(shaderId);
 
     GLint compileStatus;
-    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compileStatus); ck();
+    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compileStatus);
     if (compileStatus != GL_TRUE) {
         char infoLog[512];
-        glGetShaderInfoLog(shaderId, 512, NULL, infoLog); ck();
+        glGetShaderInfoLog(shaderId, 512, NULL, infoLog);
         printf("Shader %s compilation failed: %s", name, infoLog);
         exit(-1);
     }
@@ -40,18 +40,18 @@ GLuint shaderFromSource(char* name, char* path) {
 }
 
 GLuint shaderProgramFromShader(GLuint shaderId) {
-    GLuint programId = glCreateProgram(); ck();
-    glAttachShader(programId, shaderId); ck();
-    glLinkProgram(programId); ck();
+    GLuint programId = glCreateProgram();
+    glAttachShader(programId, shaderId);
+    glLinkProgram(programId);
     GLint programStatus;
-    glGetProgramiv(programId, GL_LINK_STATUS, &programStatus); ck();
+    glGetProgramiv(programId, GL_LINK_STATUS, &programStatus);
     if (programStatus != 1) {
         char infoLog[512];
-        glGetProgramInfoLog(programId, 512, NULL, infoLog); ck();
-        printf("Shader program link failed: %s\n", infoLog); ck();
+        glGetProgramInfoLog(programId, 512, NULL, infoLog);
+        printf("Shader program link failed: %s\n", infoLog);
         exit(-1);
     }
-    glDetachShader(programId, shaderId); ck();
+    glDetachShader(programId, shaderId);
     return programId;
 }
 
