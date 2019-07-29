@@ -45,7 +45,7 @@ mat3 getLookAt(hmm_vec3 Eye, hmm_vec3 Center, hmm_vec3 Up) {
     return result;
 }
 
-GLuint genImageBuffer(const GLuint texUnit, const int nx, const int ny) {
+GLuint createAndBindEmptyTexture(const GLuint texUnit, const int nx, const int ny) {
     GLuint texture;
     glGenTextures(1, &texture); ck();
     glActiveTexture(GL_TEXTURE0 + texUnit);
@@ -56,7 +56,7 @@ GLuint genImageBuffer(const GLuint texUnit, const int nx, const int ny) {
     return texture;
 }
 
-GLuint createImageBuffer(const GLuint texUnit, const int nx, const int ny, const u8 *data) {
+GLuint createAndBindTextureFromImage(const GLuint texUnit, const int nx, const int ny, const u8 *data) {
     GLuint texture;
     glGenTextures(1, &texture); ck();
     glActiveTexture(GL_TEXTURE0 + texUnit);
@@ -77,7 +77,7 @@ typedef struct {
     int ySkyMap;
 } ShaderData;
 
-GLuint setupSSBO(GLuint programId, int nx, int ny, int xSkyMap, int ySkyMap) {
+GLuint createAndBindSSBO(GLuint programId, GLuint ssboLocation, int nx, int ny, int xSkyMap, int ySkyMap) {
     hmm_vec3 eye = HMM_Vec3(0, 3, -20);
     hmm_vec3 center = HMM_Vec3(0, 0, 0);
     hmm_vec3 up = HMM_Vec3(-0.3, 1, 0);
@@ -100,7 +100,7 @@ GLuint setupSSBO(GLuint programId, int nx, int ny, int xSkyMap, int ySkyMap) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(shader_data), &shader_data, GL_STATIC_DRAW);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssboLocation, ssbo);
     return ssbo;
 }
 
@@ -137,18 +137,17 @@ int main() {
     }
 
 
-    GLuint outputTextureId = genImageBuffer(0, nx, ny);
+    GLuint outputTextureId = createAndBindEmptyTexture(0, nx, ny);
 
     int xSkyMap, ySkyMap, nSkyMap;
     u8 *skyMap = stbi_load("data/sky8k.jpg", &xSkyMap, &ySkyMap, &nSkyMap, STBI_rgb_alpha);
-    GLuint skyMapTextureId = createImageBuffer(1, xSkyMap, ySkyMap, skyMap);
+    GLuint skyMapTextureId = createAndBindTextureFromImage(1, xSkyMap, ySkyMap, skyMap);
 
     GLuint shaderId = shaderFromSource("rayTracer", "shaders/compute.glsl");
     GLuint programId = shaderProgramFromShader(shaderId);
     glUseProgram(programId);
 
-    GLuint ssbo = setupSSBO(programId, nx, ny, xSkyMap, ySkyMap);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
+    GLuint ssbo = createAndBindSSBO(programId, 0, nx, ny, xSkyMap, ySkyMap);
 
     glDispatchCompute(nx/32, ny/32, 1); ck();
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); ck();

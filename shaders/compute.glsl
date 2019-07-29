@@ -21,7 +21,7 @@ const float POTENTIAL_COEF = -1.5;
 const float SKY_SPHERE_RADIUS = 30.0;
 
 void main() {
-    vec4 color = imageLoad(skyMap, ivec2(gl_GlobalInvocationID.xy));
+//    vec4 color = imageLoad(skyMap, ivec2(gl_GlobalInvocationID.xy));
 //    vec4 color = vec4(lookAt[0][0], -lookAt[0][1], lookAt[0][2], 1.0);
 //    vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
 //    uint x = gl_GlobalInvocationID.x;
