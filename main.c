@@ -6,11 +6,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <math.h>
 
 #define M_PI 3.14159265358979323846f
 
 typedef unsigned char u8;
+
+#define internal static
 
 #include "io.c"
 #include "math.c"
@@ -25,20 +28,20 @@ typedef struct {
     float lookAt[4][4];
 } ShaderData;
 
-setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap,
-        hmm_vec3 eye,
+internal setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap,
+        vec3 eye,
         ShaderData *shader_data) {
-    hmm_vec3 center = HMM_Vec3(0, 0, 0);
-    hmm_vec3 up = HMM_Vec3(-0.3, 1, 0);
+    vec3 center = newVec3(0.0f, 0.0f, 0.0f);
+    vec3 up = newVec3(-0.3f, 1.0f, 0.0f);
     mat3 lookAt = getLookAt(eye, center, up);
     shader_data->nx = (float)nx;
     shader_data->ny = (float)ny;
     shader_data->xSkyMap = (float)xSkyMap;
     shader_data->ySkyMap = (float)ySkyMap;
     for (int i=0; i<3; i++) {
-        shader_data->eyeAndTanFov[i] = eye.Elements[i];
+        shader_data->eyeAndTanFov[i] = eye.E[i];
         for(int j=0; j<3; j++) {
-            shader_data->lookAt[i][j] = lookAt.Elements[i][j];
+            shader_data->lookAt[i][j] = lookAt.E[i][j];
         }
         shader_data->lookAt[i][3] = 0.0f;
     }
@@ -72,6 +75,18 @@ main() {
         exit(-1);
     }
 
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    if (glfwRawMouseMotionSupported()) {
+        glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    } else {
+        printf("raw mouse motion not supported");
+        exit(-1);
+    }
+
+    ShaderData shaderData;
+    double prevCursorX, prevCursorY, cursorX, cursorY;
+    bool cursorPosSet = false;
+ 
     GLuint outputTextureId = createAndBindEmptyTexture(0, nx, ny);
 
     int xSkyMap, ySkyMap, nSkyMap;
@@ -83,8 +98,7 @@ main() {
     GLuint programId = shaderProgramFromShader(shaderId);
     glUseProgram(programId);
 
-    hmm_vec3 eye = HMM_Vec3(0, 0, -20);
-    ShaderData shaderData;
+    vec3 eye = newVec3(0.0f, 0.0f, -20.0f);
     setupShaderData(nx, ny, xSkyMap, ySkyMap, eye, &shaderData);
     size_t shaderDataSize = sizeof(shaderData);
     GLuint ssbo = createAndBindSSBO(0, sizeof(shaderData), &shaderData);
@@ -93,16 +107,33 @@ main() {
     glGenFramebuffers(1, &fboId);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fboId);
     glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, outputTextureId, 0);
+
+    double xpos, ypos;
     
     while(!glfwWindowShouldClose(window)) {
+        glfwGetCursorPos(window, &xpos, &ypos);
+        if (!cursorPosSet) {
+            prevCursorX = xpos;
+            prevCursorY = ypos;
+            cursorX = xpos;
+            cursorY = ypos;
+            cursorPosSet = true;
+        } else {
+            prevCursorX = cursorX;
+            prevCursorY = cursorY;
+            cursorX = xpos;
+            cursorY = ypos;
+        }
+
         glClear(GL_COLOR_BUFFER_BIT);
         glDispatchCompute(nx/32, ny/32, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         glBlitFramebuffer(0, 0, nx, ny, 0, 0, nx, ny, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         glfwSwapBuffers(window);
         glfwPollEvents();
-        shaderData.eyeAndTanFov[2] += 0.1f;
+//        shaderData.eyeAndTanFov[2] += 0.01f;
         updateSSBO(ssbo, shaderDataSize, &shaderData);
+        printf("%f ", cursorX);
     }
 
     glDeleteFramebuffers(1, &fboId);
