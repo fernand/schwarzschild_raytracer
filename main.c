@@ -1,61 +1,97 @@
 #include "include/glad/glad.h"
 #define GLFW_DLL
 #include "include/GLFW/glfw3.h"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "include/stb_image_write.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "include/stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "include/stb_image_write.h"
 #define HANDMADE_MATH_IMPLEMENTATION
 #include "include/handmade_math.h"
 
 #include <stdio.h>
 #include <stdlib.h> // exit
-#include <math.h> // sqrt
+#include <math.h>
+
+#define M_PI 3.14159265358979323846f
 
 typedef unsigned char u8;
 
 #include "io.c"
 #include "shaders.c"
 
-GLuint genImageBuffer(const GLuint texI, const int nx, const int ny) {
+typedef struct {
+    float Elements[3][3];
+} mat3;
+
+mat3 getLookAt(hmm_vec3 Eye, hmm_vec3 Center, hmm_vec3 Up) {
+    mat3 result;
+
+    hmm_vec3 F = HMM_NormalizeVec3(HMM_SubtractVec3(Center, Eye));
+    hmm_vec3 L = HMM_NormalizeVec3(HMM_Cross(Up, F));
+    hmm_vec3 U = HMM_Cross(F, L);
+
+    result.Elements[0][0] = L.X;
+    result.Elements[0][1] = U.X;
+    result.Elements[0][2] = F.X;
+
+    result.Elements[1][0] = L.Y;
+    result.Elements[1][1] = U.Y;
+    result.Elements[1][2] = F.Y;
+
+    result.Elements[2][0] = L.Z;
+    result.Elements[2][1] = U.Z;
+    result.Elements[2][2] = F.Z;
+
+    return result;
+}
+
+GLuint genImageBuffer(const GLuint texLocation, const int nx, const int ny) {
     GLuint texture;
     glGenTextures(1, &texture); ck();
-    glActiveTexture(GL_TEXTURE0+texI); ck();
     glBindTexture(GL_TEXTURE_2D, texture); ck();
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, nx, ny, 0, GL_RGBA, GL_FLOAT, NULL);
-    glBindImageTexture(texI, texture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+    glBindImageTexture(texLocation, texture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     return texture;
 }
 
-GLuint createImageBuffer(const GLuint texI, const int nx, const int ny, const u8 *data) {
+GLuint createImageBuffer(const GLuint texLocation, const int nx, const int ny, const u8 *data) {
     GLuint texture;
     glGenTextures(1, &texture); ck();
-    glActiveTexture(GL_TEXTURE0+texI); ck();
     glBindTexture(GL_TEXTURE_2D, texture); ck();
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); ck();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, nx, ny, 0, GL_RGB, GL_UNSIGNED_BYTE, data); ck();
-    glBindImageTexture(texI, texture, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F); ck();
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, nx, ny, 0, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]); ck();
+    glBindImageTexture(texLocation, texture, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F); ck();
     return texture;
 }
 
 typedef struct {
+//    int nx;
+//    int ny;
+//    float eye[3];
     float lookAt[3][3];
-    float fov;
+//    float tanFov;
+//    int xSkyMap;
+//    int ySkyMap;
 } ShaderData;
 
-GLuint setupSSBO(GLuint programId) {
+GLuint setupSSBO(GLuint programId, int nx, int ny, int xSkyMap, int ySkyMap) {
     hmm_vec3 eye = HMM_Vec3(0, 3, -20);
     hmm_vec3 center = HMM_Vec3(0, 0, 0);
     hmm_vec3 up = HMM_Vec3(-0.3, 1, 0);
-    hmm_mat4 lookAt = HMM_LookAt(eye, center, up);
+    mat3 lookAt = getLookAt(eye, center, up);
     ShaderData shader_data;
-    for(int i=0; i<3; i++) {
+    for (int i=0; i<3; i++) {
+//        shader_data.eye[i] = eye.Elements[i];
         for(int j=0; j<3; j++) {
             shader_data.lookAt[i][j] = lookAt.Elements[i][j];
         }
     }
-    shader_data.fov = 55.0f;
+//    shader_data.nx = nx;
+//    shader_data.ny = ny;
+//    shader_data.tanFov = tan(M_PI / 180.0f) * 55.0f;
+//    shader_data.xSkyMap = xSkyMap;
+//    shader_data.ySkyMap = ySkyMap;
 
     GLuint ssbo;
     glGenBuffers(1, &ssbo);
@@ -77,8 +113,8 @@ void writePNG(const int nx, const int ny, const float *imgData) {
 }
 
 int main() {
-    const int nx = 512;
-    const int ny = 256;
+    const int nx = 1024;
+    const int ny = 1024;
 
     if (!glfwInit()) {
         printf("Could not init GLFW\n");
@@ -98,19 +134,25 @@ int main() {
         return -1;
     }
 
-    GLuint outputTexI = 0;
-    GLuint outputTextureId = genImageBuffer(outputTexI, nx, ny);
-    int xSkyMap, ySkyMap, nSkyMap;
-    u8 *skyMap = stbi_load("data/sky8k.jpg", &xSkyMap, &ySkyMap, &nSkyMap, STBI_rgb);
-    GLuint skyMapTexI = 1;
-    GLuint skyMapTextureId = createImageBuffer(skyMapTexI, xSkyMap, ySkyMap, skyMap);
     GLuint shaderId = shaderFromSource("rayTracer", "shaders/compute.glsl");
     GLuint programId = shaderProgramFromShader(shaderId);
+
+    GLuint outputTextureId = genImageBuffer(0, nx, ny);
+    GLint outputTexLocation = glGetUniformLocation(programId, "pixels"); ck();
+
+    int xSkyMap, ySkyMap, nSkyMap;
+//    u8 *skyMap = stbi_load("data/sky8k.jpg", &xSkyMap, &ySkyMap, &nSkyMap, STBI_rgb_alpha);
+    u8 *skyMap = stbi_load("source.png", &xSkyMap, &ySkyMap, &nSkyMap, STBI_rgb_alpha);
+    GLuint skyMapTextureId = createImageBuffer(1, xSkyMap, ySkyMap, skyMap);
+    GLint skyMapTexLocation = glGetUniformLocation(programId, "skyMap"); ck();
+
     glUseProgram(programId);
 
-    GLuint ssbo = setupSSBO(programId);
+    glUniform1i(outputTexLocation, 0);
+    glUniform1i(skyMapTexLocation, 1);
+    GLuint ssbo = setupSSBO(programId, nx, ny, xSkyMap, ySkyMap);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssbo);
 
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo);
     glDispatchCompute(nx/32, ny/32, 1); ck();
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); ck();
 
@@ -121,6 +163,9 @@ int main() {
     writePNG(nx, ny, imgData);
 
     free(imgData);
+    stbi_image_free(skyMap);
+    glDeleteTextures(1, &outputTextureId);
+    glDeleteTextures(1, &skyMapTextureId);
     glDeleteShader(shaderId);
     glDeleteProgram(programId);
     glfwTerminate();
