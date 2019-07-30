@@ -2,9 +2,7 @@ typedef union {
     struct {
         float X, Y, Z;
     };
-    struct {
-        float E[3];
-    };
+    float E[3];
 } vec3;
 
 inline vec3 newVec3(float x, float y, float z) {
@@ -51,11 +49,44 @@ inline vec3 normalizeVec3(vec3 v) {
 }
 
 typedef struct {
-    float E[3][3];
-} mat3;
+    float E[4][4];
+} mat4;
 
-mat3 getLookAt(vec3 eye, vec3 center, vec3 up) {
-    mat3 result;
+vec3 transform(mat4 m, vec3 v) {
+    vec3 result;
+    result.X = m.E[0][0] * v.X + m.E[1][0] * v.Y + m.E[2][0] * v.Z;
+    result.Y = m.E[0][1] * v.X + m.E[1][1] * v.Y + m.E[2][1] * v.Z;
+    result.Z = m.E[0][2] * v.X + m.E[1][2] * v.Y + m.E[2][2] * v.Z;
+    return result;
+}
+
+mat4 multiplyMatrix(mat4 a, mat4 b) {
+    mat4 result;
+    for (int c=0; c<4; c++) {
+        for (int r=0; r<4; r++) {
+            for(int i=0; i<4; i++) {
+                result.E[c][r] = a.E[i][r] * b.E[c][i];
+            }
+        }
+    }
+    return result;
+}
+
+mat4 rotationMatrix(float alpha, float beta) {
+    float cAlpha = cosf(alpha);
+    float cBeta = cosf(beta);
+    float sAlpha = sinf(alpha);
+    float sBeta = sinf(beta);
+    return (mat4) {{
+        {cAlpha, sAlpha * sBeta, sAlpha * cBeta, 0.0f},
+        {0.0f, cBeta, -sBeta, 0.0f},
+        {-sAlpha, cAlpha * sBeta, cAlpha * cBeta, 0.0f},
+        {0.0f, 0.0f, 0.0f, 1.0f}
+    }};
+}
+
+mat4 getLookAt(vec3 eye, vec3 center, vec3 up) {
+    mat4 result;
 
     vec3 F = normalizeVec3(subtractVec3(center, eye));
     vec3 L = normalizeVec3(crossVec3(up, F));
@@ -64,14 +95,22 @@ mat3 getLookAt(vec3 eye, vec3 center, vec3 up) {
     result.E[0][0] = L.X;
     result.E[0][1] = U.X;
     result.E[0][2] = F.X;
+    result.E[0][3] = 0.0f;
 
     result.E[1][0] = L.Y;
     result.E[1][1] = U.Y;
     result.E[1][2] = F.Y;
+    result.E[1][3] = 0.0f;
 
     result.E[2][0] = L.Z;
     result.E[2][1] = U.Z;
     result.E[2][2] = F.Z;
+    result.E[2][3] = 0.0f;
+
+    result.E[3][0] = dotVec3(L, eye);
+    result.E[3][1] = -dotVec3(U, eye);
+    result.E[3][2] = -dotVec3(F, eye);
+    result.E[3][3] = 1.0f;
 
     return result;
 }

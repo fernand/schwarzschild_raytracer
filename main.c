@@ -25,7 +25,7 @@ typedef struct {
     float xSkyMap;
     float ySkyMap;
     float eyeAndTanFov[4];
-    float lookAt[4][4];
+    mat4 lookAt;
 } ShaderData;
 
 internal setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap,
@@ -33,7 +33,7 @@ internal setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap,
         ShaderData *shader_data) {
     vec3 center = newVec3(0.0f, 0.0f, 0.0f);
     vec3 up = newVec3(-0.3f, 1.0f, 0.0f);
-    mat3 lookAt = getLookAt(eye, center, up);
+    mat4 lookAt = getLookAt(eye, center, up);
     shader_data->nx = (float)nx;
     shader_data->ny = (float)ny;
     shader_data->xSkyMap = (float)xSkyMap;
@@ -41,14 +41,14 @@ internal setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap,
     for (int i=0; i<3; i++) {
         shader_data->eyeAndTanFov[i] = eye.E[i];
         for(int j=0; j<3; j++) {
-            shader_data->lookAt[i][j] = lookAt.E[i][j];
+            shader_data->lookAt.E[i][j] = lookAt.E[i][j];
         }
-        shader_data->lookAt[i][3] = 0.0f;
+        shader_data->lookAt.E[i][3] = 0.0f;
     }
     for (int i=3; i<4; i++) {
         shader_data->eyeAndTanFov[i] = tan(M_PI / 180.0f) * 55.0f;
         for (int j=0; j<4; j++) {
-            shader_data->lookAt[i][j] = 0.0f;
+            shader_data->lookAt.E[i][j] = 0.0f;
         }
     }
 }
@@ -111,6 +111,14 @@ main() {
     double xpos, ypos;
     
     while(!glfwWindowShouldClose(window)) {
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDispatchCompute(nx/32, ny/32, 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        glBlitFramebuffer(0, 0, nx, ny, 0, 0, nx, ny, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glfwSwapBuffers(window);
+
+        glfwPollEvents();
+
         glfwGetCursorPos(window, &xpos, &ypos);
         if (!cursorPosSet) {
             prevCursorX = xpos;
@@ -124,16 +132,13 @@ main() {
             cursorX = xpos;
             cursorY = ypos;
         }
-
-        glClear(GL_COLOR_BUFFER_BIT);
-        glDispatchCompute(nx/32, ny/32, 1);
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-        glBlitFramebuffer(0, 0, nx, ny, 0, 0, nx, ny, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        float dAlpha = 0.05f * (cursorX - prevCursorX) * M_PI / 180.0f; // yaw
+        float dBeta = 0.05f * (cursorY - prevCursorY) * M_PI / 180.0f; // pitch
+        mat4 rot = rotationMatrix(dAlpha, dBeta);
+        mat4 rotatedLookAt = multiplyMatrix(rot, shaderData.lookAt);
+        memcpy(&shaderData.lookAt, &rotatedLookAt, sizeof(rotatedLookAt));
 //        shaderData.eyeAndTanFov[2] += 0.01f;
         updateSSBO(ssbo, shaderDataSize, &shaderData);
-        printf("%f ", cursorX);
     }
 
     glDeleteFramebuffers(1, &fboId);
