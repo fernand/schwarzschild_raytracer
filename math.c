@@ -5,11 +5,11 @@ typedef union {
     float E[3];
 } vec3;
 
-inline vec3 newVec3(float x, float y, float z) {
+static inline vec3 newVec3(float x, float y, float z) {
     return (vec3) {x, y, z};
 }
 
-inline vec3 addVec3(vec3 u, vec3 v) {
+static inline vec3 addVec3(vec3 u, vec3 v) {
     vec3 result;
     result.X = u.X + v.X;
     result.Y = u.Y + v.Y;
@@ -17,7 +17,7 @@ inline vec3 addVec3(vec3 u, vec3 v) {
     return result;
 }
 
-inline vec3 subtractVec3(vec3 u, vec3 v) {
+static inline vec3 subtractVec3(vec3 u, vec3 v) {
     vec3 result;
     result.X = u.X - v.X;
     result.Y = u.Y - v.Y;
@@ -25,11 +25,11 @@ inline vec3 subtractVec3(vec3 u, vec3 v) {
     return result;
 }
 
-inline float dotVec3(vec3 u, vec3 v) {
+static inline float dotVec3(vec3 u, vec3 v) {
     return u.X * v.X + u.Y * v.Y + u.Z * v.Z;
 }
 
-inline vec3 crossVec3(vec3 u, vec3 v) {
+static inline vec3 crossVec3(vec3 u, vec3 v) {
     vec3 result;
     result.X = u.Y * v.Z - u.Z * v.Y;
     result.Y = -(u.X * v.Z - u.Z * v.X);
@@ -37,7 +37,7 @@ inline vec3 crossVec3(vec3 u, vec3 v) {
     return result;
 }
 
-inline vec3 normalizeVec3(vec3 v) {
+static inline vec3 normalizeVec3(vec3 v) {
     vec3 result = {0};
     float norm = sqrt(dotVec3(v, v));
     if (norm > 0.0001f * 0.0001f) {
@@ -52,7 +52,7 @@ typedef struct {
     float E[4][4];
 } mat4;
 
-vec3 transform(mat4 m, vec3 v) {
+static vec3 transform(mat4 m, vec3 v) {
     vec3 result;
     result.X = m.E[0][0] * v.X + m.E[1][0] * v.Y + m.E[2][0] * v.Z;
     result.Y = m.E[0][1] * v.X + m.E[1][1] * v.Y + m.E[2][1] * v.Z;
@@ -60,7 +60,7 @@ vec3 transform(mat4 m, vec3 v) {
     return result;
 }
 
-mat4 multiplyMatrix(mat4 a, mat4 b) {
+static mat4 multiplyMatrix(mat4 a, mat4 b) {
     mat4 result;
     for (int c=0; c<4; c++) {
         for (int r=0; r<4; r++) {
@@ -72,7 +72,7 @@ mat4 multiplyMatrix(mat4 a, mat4 b) {
     return result;
 }
 
-mat4 rotationMatrix(float alpha, float beta) {
+static mat4 rotationMatrix(float alpha, float beta) {
     float cAlpha = cosf(alpha);
     float cBeta = cosf(beta);
     float sAlpha = sinf(alpha);
@@ -85,7 +85,7 @@ mat4 rotationMatrix(float alpha, float beta) {
     }};
 }
 
-mat4 getLookAt(vec3 eye, vec3 center, vec3 up) {
+static mat4 getLookAt(vec3 eye, vec3 center, vec3 up) {
     mat4 result;
 
     vec3 F = normalizeVec3(subtractVec3(center, eye));
