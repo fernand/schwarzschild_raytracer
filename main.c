@@ -13,8 +13,6 @@
 
 typedef unsigned char u8;
 
-#define internal static
-
 #include "io.c"
 #include "math.c"
 #include "opengl.c"
@@ -28,7 +26,7 @@ typedef struct {
     mat4 lookAt;
 } ShaderData;
 
-internal setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap,
+static setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap,
         vec3 eye,
         ShaderData *shader_data) {
     vec3 center = newVec3(0.0f, 0.0f, 0.0f);

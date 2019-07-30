@@ -1,4 +1,4 @@
-void ck() {
+static void ck() {
     GLenum err = glGetError();
     if (err == GL_NO_ERROR) {
         return;
@@ -18,7 +18,7 @@ void ck() {
     exit(-1);
 }
 
-GLuint createAndBindEmptyTexture(const GLuint texUnit, const int nx, const int ny) {
+static GLuint createAndBindEmptyTexture(const GLuint texUnit, const int nx, const int ny) {
     GLuint texture;
     glGenTextures(1, &texture);
     glActiveTexture(GL_TEXTURE0 + texUnit);
@@ -29,7 +29,7 @@ GLuint createAndBindEmptyTexture(const GLuint texUnit, const int nx, const int n
     return texture;
 }
 
-GLuint createAndBindTextureFromImage(const GLuint texUnit, const int nx, const int ny, const u8 *data) {
+static GLuint createAndBindTextureFromImage(const GLuint texUnit, const int nx, const int ny, const u8 *data) {
     GLuint texture;
     glGenTextures(1, &texture);
     glActiveTexture(GL_TEXTURE0 + texUnit);
@@ -41,7 +41,7 @@ GLuint createAndBindTextureFromImage(const GLuint texUnit, const int nx, const i
     return texture;
 }
 
-GLuint createAndBindSSBO(GLuint ssboLocation, size_t bufferSize, void *buffer) {
+static GLuint createAndBindSSBO(GLuint ssboLocation, size_t bufferSize, void *buffer) {
     GLuint ssbo;
     glGenBuffers(1, &ssbo);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
@@ -51,14 +51,14 @@ GLuint createAndBindSSBO(GLuint ssboLocation, size_t bufferSize, void *buffer) {
     return ssbo;
 }
 
-void updateSSBO(GLuint ssbo, size_t bufferSize, void *buffer) {
+static void updateSSBO(GLuint ssbo, size_t bufferSize, void *buffer) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
     GLvoid *p = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
     memcpy(p, buffer, bufferSize);
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 }
 
-GLuint shaderFromSource(char* name, char* path) {
+static GLuint shaderFromSource(char* name, char* path) {
     GLuint shaderId = glCreateShader(GL_COMPUTE_SHADER);
     char source[10240];
     int len = 10240;
@@ -79,7 +79,7 @@ GLuint shaderFromSource(char* name, char* path) {
     return shaderId;
 }
 
-GLuint shaderProgramFromShader(GLuint shaderId) {
+static GLuint shaderProgramFromShader(GLuint shaderId) {
     GLuint programId = glCreateProgram();
     glAttachShader(programId, shaderId);
     glLinkProgram(programId);
@@ -95,7 +95,7 @@ GLuint shaderProgramFromShader(GLuint shaderId) {
     return programId;
 }
 
-void printWorkgroupInfo() {
+static void printWorkgroupInfo() {
     GLint xCnt, yCnt, zCnt;
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &xCnt);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &yCnt);
