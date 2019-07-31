@@ -22,32 +22,31 @@ typedef struct {
     float ny;
     float xSkyMap;
     float ySkyMap;
-    float eyeAndTanFov[4];
+    vec3 eye;
+    float tanFov;
     mat4 lookAt;
 } ShaderData;
 
 static setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap,
         vec3 eye,
-        ShaderData *shader_data) {
+        ShaderData *shaderData) {
     vec3 center = newVec3(0.0f, 0.0f, 0.0f);
     vec3 up = newVec3(-0.3f, 1.0f, 0.0f);
     mat4 lookAt = getLookAt(eye, center, up);
-    shader_data->nx = (float)nx;
-    shader_data->ny = (float)ny;
-    shader_data->xSkyMap = (float)xSkyMap;
-    shader_data->ySkyMap = (float)ySkyMap;
+    shaderData->nx = (float)nx;
+    shaderData->ny = (float)ny;
+    shaderData->xSkyMap = (float)xSkyMap;
+    shaderData->ySkyMap = (float)ySkyMap;
+    shaderData->eye = eye;
+    shaderData->tanFov = tan(M_PI / 180.0f) * 55.0f;
     for (int i=0; i<3; i++) {
-        shader_data->eyeAndTanFov[i] = eye.E[i];
         for(int j=0; j<3; j++) {
-            shader_data->lookAt.E[i][j] = lookAt.E[i][j];
+            shaderData->lookAt.E[i][j] = lookAt.E[i][j];
         }
-        shader_data->lookAt.E[i][3] = 0.0f;
+        shaderData->lookAt.E[i][3] = 0.0f;
     }
-    for (int i=3; i<4; i++) {
-        shader_data->eyeAndTanFov[i] = tan(M_PI / 180.0f) * 55.0f;
-        for (int j=0; j<4; j++) {
-            shader_data->lookAt.E[i][j] = 0.0f;
-        }
+    for (int j=0; j<4; j++) {
+        shaderData->lookAt.E[3][j] = 0.0f;
     }
 }
 
@@ -78,21 +77,23 @@ static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
     int state = glfwGetKey(window, GLFW_KEY_W);
     if (state == GLFW_PRESS) {
         vec3 v = transform(shaderData->lookAt, newVec3(0.f, 0.f, 0.1f));
-        vec3 eye = newVec3(shaderData->eyeAndTanFov[0], shaderData->eyeAndTanFov[1], shaderData->eyeAndTanFov[2]);
-        eye = addVec3(eye, v);
-        memcpy(&shaderData->eyeAndTanFov, &eye, sizeof(eye));
+        shaderData->eye = addVec3(shaderData->eye, v);
     }
-#if 0
     state = glfwGetKey(window, GLFW_KEY_S);
-    if (state == GLFW_PRESS)
-        shaderData->eyeAndTanFov[2] -= 0.1f;
+    if (state == GLFW_PRESS) {
+        vec3 v = transform(shaderData->lookAt, newVec3(0.f, 0.f, -0.1f));
+        shaderData->eye = addVec3(shaderData->eye, v);
+    }
     state = glfwGetKey(window, GLFW_KEY_A);
-    if (state == GLFW_PRESS)
-        shaderData->eyeAndTanFov[0] -= 0.1f;
+    if (state == GLFW_PRESS) {
+        vec3 v = transform(shaderData->lookAt, newVec3(-0.1f, 0.f, 0.f));
+        shaderData->eye = addVec3(shaderData->eye, v);
+    }
     state = glfwGetKey(window, GLFW_KEY_D);
-    if (state == GLFW_PRESS)
-        shaderData->eyeAndTanFov[0] += 0.1f;
-#endif
+    if (state == GLFW_PRESS) {
+        vec3 v = transform(shaderData->lookAt, newVec3(0.1f, 0.f, 0.f));
+        shaderData->eye = addVec3(shaderData->eye, v);
+    }
 }
 
 main() {
