@@ -130,12 +130,11 @@ main() {
             cursorX = xpos;
             cursorY = ypos;
         }
-        float dAlpha = 0.05f * (cursorX - prevCursorX) * M_PI / 180.0f; // yaw
+        float dAlpha = 0.05f * -(cursorX - prevCursorX) * M_PI / 180.0f; // yaw
         float dBeta = 0.05f * (cursorY - prevCursorY) * M_PI / 180.0f; // pitch
         mat4 rot = rotationMatrix(dAlpha, dBeta);
         mat4 rotatedLookAt = multiplyMatrix(rot, shaderData.lookAt);
         memcpy(&shaderData.lookAt, &rotatedLookAt, sizeof(rotatedLookAt));
-//        shaderData.eyeAndTanFov[2] += 0.01f;
         updateSSBO(ssbo, shaderDataSize, &shaderData);
     }
 

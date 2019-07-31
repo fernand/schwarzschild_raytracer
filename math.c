@@ -61,11 +61,11 @@ static vec3 transform(mat4 m, vec3 v) {
 }
 
 static mat4 multiplyMatrix(mat4 a, mat4 b) {
-    mat4 result;
+    mat4 result = {0};
     for (int c=0; c<4; c++) {
         for (int r=0; r<4; r++) {
             for(int i=0; i<4; i++) {
-                result.E[c][r] = a.E[i][r] * b.E[c][i];
+                result.E[c][r] += a.E[i][r] * b.E[c][i];
             }
         }
     }

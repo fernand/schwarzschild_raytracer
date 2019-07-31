@@ -52,7 +52,7 @@ static GLuint createAndBindSSBO(GLuint ssboLocation, size_t bufferSize, void *bu
 }
 
 static void updateSSBO(GLuint ssbo, size_t bufferSize, void *buffer) {
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+    // No need to bind the buffer for now since it's the only one we're using.
     GLvoid *p = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
     memcpy(p, buffer, bufferSize);
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
