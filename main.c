@@ -74,6 +74,19 @@ static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
     mat4 rot = rotationMatrix(dAlpha, dBeta);
     mat4 rotatedLookAt = multiplyMatrix(rot, shaderData->lookAt);
     memcpy(&shaderData->lookAt, &rotatedLookAt, sizeof(rotatedLookAt));
+
+    int state = glfwGetKey(window, GLFW_KEY_W);
+    if (state == GLFW_PRESS)
+        shaderData->eyeAndTanFov[2] += 0.1f;
+    state = glfwGetKey(window, GLFW_KEY_S);
+    if (state == GLFW_PRESS)
+        shaderData->eyeAndTanFov[2] -= 0.1f;
+    state = glfwGetKey(window, GLFW_KEY_A);
+    if (state == GLFW_PRESS)
+        shaderData->eyeAndTanFov[0] -= 0.1f;
+    state = glfwGetKey(window, GLFW_KEY_D);
+    if (state == GLFW_PRESS)
+        shaderData->eyeAndTanFov[0] += 0.1f;
 }
 
 main() {
