@@ -76,8 +76,13 @@ static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
     memcpy(&shaderData->lookAt, &rotatedLookAt, sizeof(rotatedLookAt));
 
     int state = glfwGetKey(window, GLFW_KEY_W);
-    if (state == GLFW_PRESS)
-        shaderData->eyeAndTanFov[2] += 0.1f;
+    if (state == GLFW_PRESS) {
+        vec3 v = transform(shaderData->lookAt, newVec3(0.f, 0.f, 0.1f));
+        vec3 eye = newVec3(shaderData->eyeAndTanFov[0], shaderData->eyeAndTanFov[1], shaderData->eyeAndTanFov[2]);
+        eye = addVec3(eye, v);
+        memcpy(&shaderData->eyeAndTanFov, &eye, sizeof(eye));
+    }
+#if 0
     state = glfwGetKey(window, GLFW_KEY_S);
     if (state == GLFW_PRESS)
         shaderData->eyeAndTanFov[2] -= 0.1f;
@@ -87,6 +92,7 @@ static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
     state = glfwGetKey(window, GLFW_KEY_D);
     if (state == GLFW_PRESS)
         shaderData->eyeAndTanFov[0] += 0.1f;
+#endif
 }
 
 main() {

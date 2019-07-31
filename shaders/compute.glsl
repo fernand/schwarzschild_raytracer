@@ -44,17 +44,16 @@ void main() {
         vec3 accel = POTENTIAL_COEF * h2 * point / pow(sqrNorm, 2.5);
         velocity += accel * STEP;
 
+        float theta = acos(point.z / length(point));
+        float phi = atan(point.y, point.x);
         if (sqrNorm > SKY_R2) {
-            float phi = atan(point.y, point.x);
-            float theta = acos(point.z / length(point));
             int u = int((phi / (2*PI)) * xSkyMap);
             int v = int((theta / PI) * ySkyMap);
             if (u < 0) { u = u + xSkyMap; }
             if (v < 0) { v = v + ySkyMap; }
             color = imageLoad(skyMap, ivec2(u, v));
             break;
-        }
-        else if (sqrNorm < 1) {
+        } else if (sqrNorm < 1) {
             color = vec4(0.0, 0.0, 0.0, 1.0);
             break;
         }
