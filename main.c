@@ -133,7 +133,6 @@ main() {
 
     vec3 eye = newVec3(0.0f, 0.0f, -20.0f);
     setupShaderData(nx, ny, xSkyMap, ySkyMap, eye, &shaderData);
-    size_t shaderDataSize = sizeof(shaderData);
     GLuint ssbo = createAndBindSSBO(0, sizeof(shaderData), &shaderData);
 
     GLuint fboId = 0;
@@ -151,7 +150,7 @@ main() {
         glfwPollEvents();
         actOnInput(window, &shaderData);
 
-        updateSSBO(ssbo, shaderDataSize, &shaderData);
+        updateSSBO(ssbo, sizeof(shaderData), &shaderData);
     }
 
     glDeleteFramebuffers(1, &fboId);
