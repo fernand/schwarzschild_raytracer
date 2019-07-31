@@ -51,6 +51,31 @@ static setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap,
     }
 }
 
+static double prevCursorX, prevCursorY, cursorX, cursorY;
+static bool cursorPosSet = false;
+ 
+static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+    if (!cursorPosSet) {
+        prevCursorX = xpos;
+        prevCursorY = ypos;
+        cursorX = xpos;
+        cursorY = ypos;
+        cursorPosSet = true;
+    } else {
+        prevCursorX = cursorX;
+        prevCursorY = cursorY;
+        cursorX = xpos;
+        cursorY = ypos;
+    }
+    float dAlpha = 0.05f * -(cursorX - prevCursorX) * M_PI / 180.0f; // yaw
+    float dBeta = 0.05f * (cursorY - prevCursorY) * M_PI / 180.0f; // pitch
+    mat4 rot = rotationMatrix(dAlpha, dBeta);
+    mat4 rotatedLookAt = multiplyMatrix(rot, shaderData->lookAt);
+    memcpy(&shaderData->lookAt, &rotatedLookAt, sizeof(rotatedLookAt));
+}
+
 main() {
     const int nx = 1920;
     const int ny = 1024;
@@ -62,7 +87,7 @@ main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    GLFWwindow* window = glfwCreateWindow(nx, ny, "Ray GL", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(nx, ny, "Ray GL", NULL, NULL);
     if (!window) {
         printf("Could not init GLFW window\n");
         exit(-1);
@@ -82,9 +107,6 @@ main() {
     }
 
     ShaderData shaderData;
-    double prevCursorX, prevCursorY, cursorX, cursorY;
-    bool cursorPosSet = false;
- 
     GLuint outputTextureId = createAndBindEmptyTexture(0, nx, ny);
 
     int xSkyMap, ySkyMap, nSkyMap;
@@ -106,8 +128,6 @@ main() {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fboId);
     glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, outputTextureId, 0);
 
-    double xpos, ypos;
-    
     while(!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
         glDispatchCompute(nx/32, ny/32, 1);
@@ -116,25 +136,8 @@ main() {
         glfwSwapBuffers(window);
 
         glfwPollEvents();
+        actOnInput(window, &shaderData);
 
-        glfwGetCursorPos(window, &xpos, &ypos);
-        if (!cursorPosSet) {
-            prevCursorX = xpos;
-            prevCursorY = ypos;
-            cursorX = xpos;
-            cursorY = ypos;
-            cursorPosSet = true;
-        } else {
-            prevCursorX = cursorX;
-            prevCursorY = cursorY;
-            cursorX = xpos;
-            cursorY = ypos;
-        }
-        float dAlpha = 0.05f * -(cursorX - prevCursorX) * M_PI / 180.0f; // yaw
-        float dBeta = 0.05f * (cursorY - prevCursorY) * M_PI / 180.0f; // pitch
-        mat4 rot = rotationMatrix(dAlpha, dBeta);
-        mat4 rotatedLookAt = multiplyMatrix(rot, shaderData.lookAt);
-        memcpy(&shaderData.lookAt, &rotatedLookAt, sizeof(rotatedLookAt));
         updateSSBO(ssbo, shaderDataSize, &shaderData);
     }
 
