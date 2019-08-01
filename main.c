@@ -31,7 +31,7 @@ const int nx = 1920, ny = 1024;
 float lastX = 1920 / 2, lastY = 1024 / 2;
 vec3 cP, cFront, cRight, cUp, wUp;
 bool cursorPosSet = false;
-float yaw = -90.f, pitch = 0.f;
+float yaw = 90.f, pitch = 0.f;
 const float oneRadian = M_PI / 180.0f;
 
 static void updateCamera() {
@@ -44,7 +44,7 @@ static void updateCamera() {
 }
 
 static setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap, ShaderData *shaderData) {
-    cP = newVec3(0.0f, 1.0f, 20.0f);
+    cP = newVec3(0.0f, 1.0f, -20.0f);
     wUp = newVec3(0.2f, 1.0f, 0.0f);
     updateCamera();
     shaderData->nx = (float)nx;
@@ -64,7 +64,7 @@ static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
         lastY = ypos;
         cursorPosSet = true;
     }
-    float xOffset = xpos - lastX;
+    float xOffset = lastX - xpos;
     float yOffset = lastY - ypos;
     lastX = xpos;
     lastY = ypos;

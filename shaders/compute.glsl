@@ -30,7 +30,7 @@ void main() {
     uint x = gl_GlobalInvocationID.x;
     uint y = gl_GlobalInvocationID.y;
     vec3 view = vec3(
-        (-float(x) / nx + 0.5) * tanFov,
+        (float(x) / nx - 0.5) * tanFov,
         ((float(y) / ny - 0.5) * ny / nx) * tanFov,
         -1.0
     );
