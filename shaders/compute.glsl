@@ -14,9 +14,13 @@ layout(std430, binding = 0) readonly buffer data
 
 const float PI = 3.1415926535897932384626433832795;
 const int NUM_ITER = 10000;
-const float STEP = 0.05;
+const float STEP = 0.1;
 const float POTENTIAL_COEF = -1.5;
 const float SKY_R2 = 30.0 * 30.0;
+const float D_INNER_R = 2.6;
+const float D_INNER_R2 = D_INNER_R * D_INNER_R;
+const float D_OUTER_R = 14.0;
+const float D_OUTER_R2 = D_OUTER_R * D_OUTER_R;
 
 void main() {
     vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
@@ -39,6 +43,7 @@ void main() {
     float sqrNorm = dot(point, point);
     vec3 crossed = cross(point, velocity);
     float h2 = dot(crossed, crossed);
+    bool crossedAccretion = false;
 
     for (int i=0; i<NUM_ITER; i++) {
         prevPoint = point;
@@ -55,19 +60,23 @@ void main() {
             int v = int((theta / PI) * ySkyMap);
             if (u < 0) { u = u + xSkyMap; }
             if (v < 0) { v = v + ySkyMap; }
-            color = imageLoad(skyMap, ivec2(u, v));
+            if (crossedAccretion) {
+                color = mix(imageLoad(skyMap, ivec2(u, v)), color, color.a);
+            } else {
+                color = imageLoad(skyMap, ivec2(u, v));
+            }
             break;
         } else if (sqrNorm < 1. && prevSqrNorm > 1.) {
-            color = vec4(0.0);
+            if (crossedAccretion) {
+                color = mix(vec4(0.0, 0.0, 0.0, 1.0) ,color, color.a);
+            }
             break;
-        } else if (sqrNorm >= 2.6 && sqrNorm <= 14.0) {
-               if (prevPoint.y > 0. && point.y < 0.) {
-                    color = vec4(1.0, 0.0, 0.0, 1.0);
-                    break;
-               } else if (prevPoint.y < 0. && point.y > 0.) {
-                    color = vec4(0.0, 1.0, 0.0, 1.0);
-                    break;
-               } 
+        } else if (sqrNorm >= D_INNER_R2 && sqrNorm <= D_OUTER_R2 && ((prevPoint.y > 0. && point.y < 0.) || (prevPoint.y < 0. && point.y > 0.))) {
+            if (!crossedAccretion) {
+                color = vec4(1.0, 1.0, 0.98, 0.0);
+            }
+            crossedAccretion = true;
+            color.a += sin(PI * pow(((D_OUTER_R - sqrt(sqrNorm)) / (D_OUTER_R - D_INNER_R)), 2));
         }
     }
     imageStore(pixels, ivec2(gl_GlobalInvocationID.xy), color);

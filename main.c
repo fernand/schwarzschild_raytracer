@@ -30,7 +30,7 @@ typedef struct {
 static setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap, ShaderData *shaderData) {
     vec3 eye = newVec3(0.0f, 1.0f, -20.0f);
     vec3 center = newVec3(0.0f, 0.0f, 0.0f);
-    vec3 up = newVec3(0.2f, 1.0f, 0.0f);
+    vec3 up = newVec3(-0.2f, -1.0f, 0.0f);
     mat4 lookAt = getLookAt(eye, center, up);
     shaderData->nx = (float)nx;
     shaderData->ny = (float)ny;
@@ -126,7 +126,7 @@ main() {
     GLuint outputTextureId = createAndBindEmptyTexture(0, nx, ny);
 
     int xSkyMap, ySkyMap, nSkyMap;
-    stbi_set_flip_vertically_on_load(true);
+    //stbi_set_flip_vertically_on_load(true);
     u8 *skyMap = stbi_load("data/sky8k.jpg", &xSkyMap, &ySkyMap, &nSkyMap, STBI_rgb_alpha);
     GLuint skyMapTextureId = createAndBindTextureFromImage(1, xSkyMap, ySkyMap, skyMap);
     stbi_image_free(skyMap);
