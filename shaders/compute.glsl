@@ -14,7 +14,7 @@ layout(std430, binding = 0) readonly buffer data
 
 const float PI = 3.1415926535897932384626433832795;
 const int NUM_ITER = 10000;
-const float STEP = 0.2;
+const float STEP = 0.05;
 const float POTENTIAL_COEF = -1.5;
 const float SKY_R2 = 30.0 * 30.0;
 
@@ -26,27 +26,29 @@ void main() {
     uint x = gl_GlobalInvocationID.x;
     uint y = gl_GlobalInvocationID.y;
     vec3 view = vec3(
-        (-float(x) / nx + 0.5) * tanFov,
-        ((float(y) / ny - 0.5) * ny / nx) * tanFov,
-        -1.0
+        (float(x) / nx - 0.5) * tanFov,
+        ((-float(y) / ny + 0.5) * ny / nx) * tanFov,
+        1.0
     );
     view = normalize(mat3(lookAt) * view);
 
     vec3 velocity = view;
     vec3 point = eyeAndTanFov.xyz;
+    vec3 prevPoint;
     float sqrNorm = dot(point, point);
     vec3 crossed = cross(point, velocity);
     float h2 = dot(crossed, crossed);
 
     for (int i=0; i<NUM_ITER; i++) {
+        prevPoint = point;
         point += velocity * STEP;
         sqrNorm = dot(point, point);
         vec3 accel = POTENTIAL_COEF * h2 * point / pow(sqrNorm, 2.5);
         velocity += accel * STEP;
 
-        float theta = acos(point.z / length(point));
-        float phi = atan(point.y, point.x);
         if (sqrNorm > SKY_R2) {
+            float theta = acos(point.z / length(point));
+            float phi = atan(point.y, point.x);
             int u = int((phi / (2*PI)) * xSkyMap);
             int v = int((theta / PI) * ySkyMap);
             if (u < 0) { u = u + xSkyMap; }
@@ -55,6 +57,10 @@ void main() {
             break;
         } else if (sqrNorm < 1) {
             color = vec4(0.0, 0.0, 0.0, 1.0);
+            break;
+        } else if (sqrNorm >= 2.6 && sqrNorm <= 14.0 &&
+                (prevPoint.y > 0. && point.y < 0.) || (prevPoint.y < 0. && point.y > 0.)) {
+            color = vec4(1.0,1.0,1.0,0.0);
             break;
         }
     }

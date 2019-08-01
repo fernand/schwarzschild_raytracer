@@ -28,16 +28,17 @@ typedef struct {
 } ShaderData;
 
 static setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap, ShaderData *shaderData) {
-    vec3 eye = newVec3(0.0f, 0.0f, 20.0f);
+    vec3 eye = newVec3(0.0f, 1.0f, -20.0f);
     vec3 center = newVec3(0.0f, 0.0f, 0.0f);
-    vec3 up = newVec3(-0.3f, 1.0f, 0.0f);
+    vec3 up = newVec3(0.2f, 1.0f, 0.0f);
     mat4 lookAt = getLookAt(eye, center, up);
     shaderData->nx = (float)nx;
     shaderData->ny = (float)ny;
     shaderData->xSkyMap = (float)xSkyMap;
     shaderData->ySkyMap = (float)ySkyMap;
     shaderData->eye = eye;
-    shaderData->tanFov = tan(M_PI / 180.0f) * 55.0f;
+//    shaderData->tanFov = tan(M_PI / 180.0f) * 55.0f;
+    shaderData->tanFov = 1.5;
     for (int i=0; i<3; i++) {
         for(int j=0; j<3; j++) {
             shaderData->lookAt.E[i][j] = lookAt.E[i][j];
@@ -74,19 +75,19 @@ static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
     memcpy(&shaderData->lookAt, &rotatedLookAt, sizeof(rotatedLookAt));
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        vec3 v = transform(shaderData->lookAt, newVec3(0.f, 0.f, -0.1f));
-        shaderData->eye = addVec3(shaderData->eye, v);
-    }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         vec3 v = transform(shaderData->lookAt, newVec3(0.f, 0.f, 0.1f));
         shaderData->eye = addVec3(shaderData->eye, v);
     }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        vec3 v = transform(shaderData->lookAt, newVec3(0.f, 0.f, -0.1f));
+        shaderData->eye = addVec3(shaderData->eye, v);
+    }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        vec3 v = transform(shaderData->lookAt, newVec3(0.1f, 0.f, 0.f));
+        vec3 v = transform(shaderData->lookAt, newVec3(-0.1f, 0.f, 0.f));
         shaderData->eye = addVec3(shaderData->eye, v);
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        vec3 v = transform(shaderData->lookAt, newVec3(-0.1f, 0.f, 0.f));
+        vec3 v = transform(shaderData->lookAt, newVec3(0.1f, 0.f, 0.f));
         shaderData->eye = addVec3(shaderData->eye, v);
     }
 }
@@ -125,6 +126,7 @@ main() {
     GLuint outputTextureId = createAndBindEmptyTexture(0, nx, ny);
 
     int xSkyMap, ySkyMap, nSkyMap;
+    stbi_set_flip_vertically_on_load(true);
     u8 *skyMap = stbi_load("data/sky8k.jpg", &xSkyMap, &ySkyMap, &nSkyMap, STBI_rgb_alpha);
     GLuint skyMapTextureId = createAndBindTextureFromImage(1, xSkyMap, ySkyMap, skyMap);
     stbi_image_free(skyMap);
