@@ -30,7 +30,7 @@ typedef struct {
 static setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap, ShaderData *shaderData) {
     vec3 eye = newVec3(0.0f, 1.0f, -20.0f);
     vec3 center = newVec3(0.0f, 0.0f, 0.0f);
-    vec3 up = newVec3(-0.2f, -1.0f, 0.0f);
+    vec3 up = newVec3(0.2f, 1.0f, 0.0f);
     mat4 lookAt = getLookAt(eye, center, up);
     shaderData->nx = (float)nx;
     shaderData->ny = (float)ny;
@@ -69,25 +69,25 @@ static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
         cursorY = ypos;
     }
     float dAlpha = 0.05f * -(cursorX - prevCursorX) * M_PI / 180.0f; // yaw
-    float dBeta = 0.05f * (cursorY - prevCursorY) * M_PI / 180.0f; // pitch
+    float dBeta = 0.05f * -(cursorY - prevCursorY) * M_PI / 180.0f; // pitch
     mat4 rot = rotationMatrix(dAlpha, dBeta);
     mat4 rotatedLookAt = multiplyMatrix(rot, shaderData->lookAt);
     memcpy(&shaderData->lookAt, &rotatedLookAt, sizeof(rotatedLookAt));
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        vec3 v = transform(shaderData->lookAt, newVec3(0.f, 0.f, 0.1f));
-        shaderData->eye = addVec3(shaderData->eye, v);
-    }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         vec3 v = transform(shaderData->lookAt, newVec3(0.f, 0.f, -0.1f));
         shaderData->eye = addVec3(shaderData->eye, v);
     }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        vec3 v = transform(shaderData->lookAt, newVec3(0.f, 0.f, 0.1f));
+        shaderData->eye = addVec3(shaderData->eye, v);
+    }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        vec3 v = transform(shaderData->lookAt, newVec3(-0.1f, 0.f, 0.f));
+        vec3 v = transform(shaderData->lookAt, newVec3(0.1f, 0.f, 0.f));
         shaderData->eye = addVec3(shaderData->eye, v);
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        vec3 v = transform(shaderData->lookAt, newVec3(0.1f, 0.f, 0.f));
+        vec3 v = transform(shaderData->lookAt, newVec3(-0.1f, 0.f, 0.f));
         shaderData->eye = addVec3(shaderData->eye, v);
     }
 }

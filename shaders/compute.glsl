@@ -14,7 +14,7 @@ layout(std430, binding = 0) readonly buffer data
 
 const float PI = 3.1415926535897932384626433832795;
 const int NUM_ITER = 10000;
-const float STEP = 0.1;
+const float STEP = 0.16;
 const float POTENTIAL_COEF = -1.5;
 const float SKY_R2 = 30.0 * 30.0;
 const float D_INNER_R = 2.6;
@@ -30,9 +30,9 @@ void main() {
     uint x = gl_GlobalInvocationID.x;
     uint y = gl_GlobalInvocationID.y;
     vec3 view = vec3(
-        (float(x) / nx - 0.5) * tanFov,
-        ((-float(y) / ny + 0.5) * ny / nx) * tanFov,
-        1.0
+        (-float(x) / nx + 0.5) * tanFov,
+        ((float(y) / ny - 0.5) * ny / nx) * tanFov,
+        -1.0
     );
     view = normalize(mat3(lookAt) * view);
 
