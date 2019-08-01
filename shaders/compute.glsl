@@ -35,12 +35,14 @@ void main() {
     vec3 velocity = view;
     vec3 point = eyeAndTanFov.xyz;
     vec3 prevPoint;
+    float prevSqrNorm;
     float sqrNorm = dot(point, point);
     vec3 crossed = cross(point, velocity);
     float h2 = dot(crossed, crossed);
 
     for (int i=0; i<NUM_ITER; i++) {
         prevPoint = point;
+        prevSqrNorm = sqrNorm;
         point += velocity * STEP;
         sqrNorm = dot(point, point);
         vec3 accel = POTENTIAL_COEF * h2 * point / pow(sqrNorm, 2.5);
@@ -55,13 +57,17 @@ void main() {
             if (v < 0) { v = v + ySkyMap; }
             color = imageLoad(skyMap, ivec2(u, v));
             break;
-        } else if (sqrNorm < 1) {
-            color = vec4(0.0, 0.0, 0.0, 1.0);
+        } else if (sqrNorm < 1. && prevSqrNorm > 1.) {
+            color = vec4(0.0);
             break;
-        } else if (sqrNorm >= 2.6 && sqrNorm <= 14.0 &&
-                (prevPoint.y > 0. && point.y < 0.) || (prevPoint.y < 0. && point.y > 0.)) {
-            color = vec4(1.0,1.0,1.0,0.0);
-            break;
+        } else if (sqrNorm >= 2.6 && sqrNorm <= 14.0) {
+               if (prevPoint.y > 0. && point.y < 0.) {
+                    color = vec4(1.0, 0.0, 0.0, 1.0);
+                    break;
+               } else if (prevPoint.y < 0. && point.y > 0.) {
+                    color = vec4(0.0, 1.0, 0.0, 1.0);
+                    break;
+               } 
         }
     }
     imageStore(pixels, ivec2(gl_GlobalInvocationID.xy), color);
