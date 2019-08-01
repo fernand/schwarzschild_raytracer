@@ -27,9 +27,8 @@ typedef struct {
     mat4 lookAt;
 } ShaderData;
 
-static setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap,
-        vec3 eye,
-        ShaderData *shaderData) {
+static setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap, ShaderData *shaderData) {
+    vec3 eye = newVec3(0.0f, 0.0f, 20.0f);
     vec3 center = newVec3(0.0f, 0.0f, 0.0f);
     vec3 up = newVec3(-0.3f, 1.0f, 0.0f);
     mat4 lookAt = getLookAt(eye, center, up);
@@ -74,24 +73,20 @@ static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
     mat4 rotatedLookAt = multiplyMatrix(rot, shaderData->lookAt);
     memcpy(&shaderData->lookAt, &rotatedLookAt, sizeof(rotatedLookAt));
 
-    int state = glfwGetKey(window, GLFW_KEY_W);
-    if (state == GLFW_PRESS) {
-        vec3 v = transform(shaderData->lookAt, newVec3(0.f, 0.f, 0.1f));
-        shaderData->eye = addVec3(shaderData->eye, v);
-    }
-    state = glfwGetKey(window, GLFW_KEY_S);
-    if (state == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         vec3 v = transform(shaderData->lookAt, newVec3(0.f, 0.f, -0.1f));
         shaderData->eye = addVec3(shaderData->eye, v);
     }
-    state = glfwGetKey(window, GLFW_KEY_A);
-    if (state == GLFW_PRESS) {
-        vec3 v = transform(shaderData->lookAt, newVec3(-0.1f, 0.f, 0.f));
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        vec3 v = transform(shaderData->lookAt, newVec3(0.f, 0.f, 0.1f));
         shaderData->eye = addVec3(shaderData->eye, v);
     }
-    state = glfwGetKey(window, GLFW_KEY_D);
-    if (state == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
         vec3 v = transform(shaderData->lookAt, newVec3(0.1f, 0.f, 0.f));
+        shaderData->eye = addVec3(shaderData->eye, v);
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        vec3 v = transform(shaderData->lookAt, newVec3(-0.1f, 0.f, 0.f));
         shaderData->eye = addVec3(shaderData->eye, v);
     }
 }
@@ -138,8 +133,7 @@ main() {
     GLuint programId = shaderProgramFromShader(shaderId);
     glUseProgram(programId);
 
-    vec3 eye = newVec3(0.0f, 0.0f, -20.0f);
-    setupShaderData(nx, ny, xSkyMap, ySkyMap, eye, &shaderData);
+    setupShaderData(nx, ny, xSkyMap, ySkyMap, &shaderData);
     GLuint ssbo = createAndBindSSBO(0, sizeof(shaderData), &shaderData);
 
     GLuint fboId = 0;

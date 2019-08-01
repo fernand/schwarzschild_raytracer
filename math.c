@@ -88,28 +88,28 @@ static mat4 rotationMatrix(float alpha, float beta) {
 static mat4 getLookAt(vec3 eye, vec3 center, vec3 up) {
     mat4 result;
 
-    vec3 F = normalizeVec3(subtractVec3(center, eye));
-    vec3 L = normalizeVec3(crossVec3(up, F));
-    vec3 U = crossVec3(F, L);
+    vec3 D = normalizeVec3(subtractVec3(eye, center));
+    vec3 R = normalizeVec3(crossVec3(up, D));
+    vec3 U = crossVec3(D, R);
 
-    result.E[0][0] = L.X;
+    result.E[0][0] = R.X;
     result.E[0][1] = U.X;
-    result.E[0][2] = F.X;
+    result.E[0][2] = D.X;
     result.E[0][3] = 0.0f;
 
-    result.E[1][0] = L.Y;
+    result.E[1][0] = R.Y;
     result.E[1][1] = U.Y;
-    result.E[1][2] = F.Y;
+    result.E[1][2] = D.Y;
     result.E[1][3] = 0.0f;
 
-    result.E[2][0] = L.Z;
+    result.E[2][0] = R.Z;
     result.E[2][1] = U.Z;
-    result.E[2][2] = F.Z;
+    result.E[2][2] = D.Z;
     result.E[2][3] = 0.0f;
 
-    result.E[3][0] = dotVec3(L, eye);
-    result.E[3][1] = -dotVec3(U, eye);
-    result.E[3][2] = -dotVec3(F, eye);
+    result.E[3][0] = 0.0f;
+    result.E[3][1] = 0.0f;
+    result.E[3][2] = 0.0f;
     result.E[3][3] = 1.0f;
 
     return result;
