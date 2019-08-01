@@ -9,6 +9,14 @@ static inline vec3 newVec3(float x, float y, float z) {
     return (vec3) {x, y, z};
 }
 
+static inline vec3 mulVec3(float a, vec3 u) {
+    vec3 result;
+    result.X = a * u.X;
+    result.Y = a * u.Y;
+    result.Z = a * u.Z;
+    return result;
+}
+
 static inline vec3 addVec3(vec3 u, vec3 v) {
     vec3 result;
     result.X = u.X + v.X;

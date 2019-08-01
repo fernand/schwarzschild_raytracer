@@ -27,75 +27,75 @@ typedef struct {
     mat4 lookAt;
 } ShaderData;
 
+const int nx = 1920, ny = 1024;
+float lastX = 1920 / 2, lastY = 1024 / 2;
+vec3 cP, cFront, cRight, cUp, wUp;
+bool cursorPosSet = false;
+float yaw = -90.f, pitch = 0.f;
+const float oneRadian = M_PI / 180.0f;
+
+static void updateCamera() {
+    cFront.X = cosf(pitch * oneRadian) * cosf(yaw * oneRadian);
+    cFront.Y = sinf(pitch * oneRadian);
+    cFront.Z = cosf(pitch * oneRadian) * sinf(yaw * oneRadian);
+    cFront = normalizeVec3(cFront);
+    cRight = normalizeVec3(crossVec3(cFront, wUp));
+    cUp = normalizeVec3(crossVec3(cRight, cFront));
+}
+
 static setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap, ShaderData *shaderData) {
-    vec3 eye = newVec3(0.0f, 1.0f, -20.0f);
-    vec3 center = newVec3(0.0f, 0.0f, 0.0f);
-    vec3 up = newVec3(0.2f, 1.0f, 0.0f);
-    mat4 lookAt = getLookAt(eye, center, up);
+    cP = newVec3(0.0f, 1.0f, 20.0f);
+    wUp = newVec3(0.2f, 1.0f, 0.0f);
+    updateCamera();
     shaderData->nx = (float)nx;
     shaderData->ny = (float)ny;
     shaderData->xSkyMap = (float)xSkyMap;
     shaderData->ySkyMap = (float)ySkyMap;
-    shaderData->eye = eye;
-//    shaderData->tanFov = tan(M_PI / 180.0f) * 55.0f;
-    shaderData->tanFov = 1.5;
-    for (int i=0; i<3; i++) {
-        for(int j=0; j<3; j++) {
-            shaderData->lookAt.E[i][j] = lookAt.E[i][j];
-        }
-        shaderData->lookAt.E[i][3] = 0.0f;
-    }
-    for (int j=0; j<4; j++) {
-        shaderData->lookAt.E[3][j] = 0.0f;
-    }
+    shaderData->eye = cP;
+    shaderData->tanFov = tan(oneRadian) * 90.f;
+    shaderData->lookAt = getLookAt(cP, addVec3(cP, cFront), cUp);
 }
 
-static double prevCursorX, prevCursorY, cursorX, cursorY;
-static bool cursorPosSet = false;
- 
 static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
     if (!cursorPosSet) {
-        prevCursorX = xpos;
-        prevCursorY = ypos;
-        cursorX = xpos;
-        cursorY = ypos;
+        lastX = xpos;
+        lastY = ypos;
         cursorPosSet = true;
-    } else {
-        prevCursorX = cursorX;
-        prevCursorY = cursorY;
-        cursorX = xpos;
-        cursorY = ypos;
     }
-    float dAlpha = 0.05f * -(cursorX - prevCursorX) * M_PI / 180.0f; // yaw
-    float dBeta = 0.05f * -(cursorY - prevCursorY) * M_PI / 180.0f; // pitch
-    mat4 rot = rotationMatrix(dAlpha, dBeta);
-    mat4 rotatedLookAt = multiplyMatrix(rot, shaderData->lookAt);
-    memcpy(&shaderData->lookAt, &rotatedLookAt, sizeof(rotatedLookAt));
+    float xOffset = xpos - lastX;
+    float yOffset = lastY - ypos;
+    lastX = xpos;
+    lastY = ypos;
+    yaw += 0.05f * xOffset;
+    pitch += 0.05f * yOffset;
+    if (pitch > 89.0f) {
+        pitch = 89.0f;
+    } else if (pitch < -89.0f) {
+        pitch = -89.0f;
+    }
+
+    updateCamera();
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        vec3 v = transform(shaderData->lookAt, newVec3(0.f, 0.f, -0.1f));
-        shaderData->eye = addVec3(shaderData->eye, v);
+        cP = addVec3(cP, mulVec3(0.1f, cFront));
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        vec3 v = transform(shaderData->lookAt, newVec3(0.f, 0.f, 0.1f));
-        shaderData->eye = addVec3(shaderData->eye, v);
+        cP = subtractVec3(cP, mulVec3(0.1f, cFront));
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        vec3 v = transform(shaderData->lookAt, newVec3(0.1f, 0.f, 0.f));
-        shaderData->eye = addVec3(shaderData->eye, v);
+        cP = subtractVec3(cP, mulVec3(0.1f, cRight));
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        vec3 v = transform(shaderData->lookAt, newVec3(-0.1f, 0.f, 0.f));
-        shaderData->eye = addVec3(shaderData->eye, v);
+        cP = addVec3(cP, mulVec3(0.1f, cRight));
     }
+
+    shaderData->lookAt = getLookAt(cP, addVec3(cP, cFront), cUp);
+    shaderData->eye = cP;
 }
 
 main() {
-    const int nx = 1920;
-    const int ny = 1024;
-
     if (!glfwInit()) {
         printf("Could not init GLFW\n");
         exit(-1);
@@ -126,7 +126,7 @@ main() {
     GLuint outputTextureId = createAndBindEmptyTexture(0, nx, ny);
 
     int xSkyMap, ySkyMap, nSkyMap;
-    //stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(true);
     u8 *skyMap = stbi_load("data/sky8k.jpg", &xSkyMap, &ySkyMap, &nSkyMap, STBI_rgb_alpha);
     GLuint skyMapTextureId = createAndBindTextureFromImage(1, xSkyMap, ySkyMap, skyMap);
     stbi_image_free(skyMap);
