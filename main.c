@@ -24,8 +24,9 @@ v3 u, v, w;
 const float oneRadian = PI / 180.0f;
 const float fov = 90.0f;
 bool cursorPosSet = false;
-float yaw = 90.f, pitch = 0.f;
+float yaw = -90.f, pitch = 0.f;
 const float speed = 0.1f;
+const float sensitivity = 0.05f;
 
 static void updateCamera() {
     cFront.x = cosf(pitch * oneRadian) * cosf(yaw * oneRadian);
@@ -52,7 +53,7 @@ typedef struct {
 } ShaderData;
 
 static setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap, ShaderData *shaderData) {
-    cP = newV3(0.0f, 1.0f, -20.0f);
+    cP = newV3(0.0f, 1.0f, 20.0f);
     wUp = newV3(0.2f, 1.0f, 0.0f);
     updateCamera();
     shaderData->nx = (float)nx;
@@ -78,8 +79,8 @@ static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
     float yOffset = lastY - ypos;
     lastX = xpos;
     lastY = ypos;
-    yaw += 0.05f * xOffset;
-    pitch += 0.05f * yOffset;
+    yaw += sensitivity * xOffset;
+    pitch += sensitivity * yOffset;
     if (pitch > 89.0f) {
         pitch = 89.0f;
     } else if (pitch < -89.0f) {
