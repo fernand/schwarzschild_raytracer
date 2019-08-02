@@ -6,7 +6,11 @@ typedef union {
 } v3;
 
 static inline v3 newV3(float x, float y, float z) {
-    return (v3) {x, y, z};
+    v3 result;
+    result.x = x;
+    result.y = y;
+    result.z = z;
+    return result;
 }
 
 static inline v3 mulV3(float a, v3 u) {
@@ -47,7 +51,7 @@ static inline v3 crossV3(v3 u, v3 v) {
 
 static inline v3 normalizeV3(v3 v) {
     v3 result = {0};
-    float norm = sqrt(dotV3(v, v));
+    float norm = sqrtf(dotV3(v, v));
     if (norm > 0.0001f * 0.0001f) {
         result.x = v.x / norm;
         result.y = v.y / norm;

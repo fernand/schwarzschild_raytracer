@@ -54,7 +54,7 @@ typedef struct {
     v4 w;
 } ShaderData;
 
-static setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap, ShaderData *shaderData) {
+static void setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap, ShaderData *shaderData) {
     cP = newV3(0.0f, 1.0f, 20.0f);
     wUp = newV3(0.2f, 1.0f, 0.0f);
     updateCamera();
@@ -69,18 +69,18 @@ static setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap, ShaderData *sha
     shaderData->w = fromV3(w);
 }
 
-static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
+static void actOnInput(GLFWwindow *window, ShaderData *shaderData) {
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
     if (!cursorPosSet) {
-        lastX = xpos;
-        lastY = ypos;
+        lastX = (float)xpos;
+        lastY = (float)ypos;
         cursorPosSet = true;
     }
-    float xOffset = xpos - lastX;
-    float yOffset = lastY - ypos;
-    lastX = xpos;
-    lastY = ypos;
+    float xOffset = (float)xpos - lastX;
+    float yOffset = lastY - (float)ypos;
+    lastX = (float)xpos;
+    lastY = (float)ypos;
     yaw += sensitivity * xOffset;
     pitch += sensitivity * yOffset;
     if (pitch > 89.0f) {
@@ -110,7 +110,7 @@ static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
     shaderData->w = fromV3(w);
 }
 
-main() {
+void main() {
     if (!glfwInit()) {
         printf("Could not init GLFW\n");
         exit(-1);
