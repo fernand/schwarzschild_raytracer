@@ -17,16 +17,18 @@
 
 #define NX 1920
 #define NY 1024
-float lastX = NX / 2, lastY = NY / 2;
-v3 cP, cFront, cRight, cUp, wUp;
-v3 u, v, w;
 
 const float oneRadian = PI / 180.0f;
 const float fov = 75.0f;
-bool cursorPosSet = false;
-float yaw = -90.f, pitch = 0.f;
 const float speed = 0.1f;
 const float sensitivity = 0.05f;
+
+bool cursorPosSet = false;
+float yaw = -90.f, pitch = 0.f;
+float lastX = NX / 2, lastY = NY / 2;
+
+v3 cP, cFront, cRight, cUp, wUp;
+v3 u, v, w;
 
 static void updateCamera() {
     cFront.x = cosf(pitch * oneRadian) * cosf(yaw * oneRadian);
