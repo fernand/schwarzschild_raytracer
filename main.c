@@ -25,7 +25,7 @@ const float sensitivity = 0.05f;
 
 bool cursorPosSet = false;
 float yaw = -90.f, pitch = 0.f;
-float lastX = NX / 2, lastY = NY / 2;
+double lastX = NX / 2, lastY = NY / 2;
 
 v3 cP, cFront, cRight, cUp, wUp;
 v3 u, v, w;
@@ -73,16 +73,16 @@ static void actOnInput(GLFWwindow *window, ShaderData *shaderData) {
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
     if (!cursorPosSet) {
-        lastX = (float)xpos;
-        lastY = (float)ypos;
+        lastX = xpos;
+        lastY = ypos;
         cursorPosSet = true;
     }
-    float xOffset = (float)xpos - lastX;
-    float yOffset = lastY - (float)ypos;
-    lastX = (float)xpos;
-    lastY = (float)ypos;
-    yaw += sensitivity * xOffset;
-    pitch += sensitivity * yOffset;
+    double xOffset = xpos - lastX;
+    double yOffset = lastY - ypos;
+    lastX = xpos;
+    lastY = ypos;
+    yaw += sensitivity * (float)xOffset;
+    pitch += sensitivity * (float)yOffset;
     if (pitch > 89.0f) {
         pitch = 89.0f;
     } else if (pitch < -89.0f) {
