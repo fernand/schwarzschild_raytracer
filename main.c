@@ -27,12 +27,14 @@ typedef struct {
     mat4 lookAt;
 } ShaderData;
 
-const int nx = 1920, ny = 1024;
-float lastX = 1920 / 2, lastY = 1024 / 2;
+#define NX 1920
+#define NY 1024
+float lastX = NX / 2, lastY = NY / 2;
 vec3 cP, cFront, cRight, cUp, wUp;
 bool cursorPosSet = false;
 float yaw = 90.f, pitch = 0.f;
 const float oneRadian = M_PI / 180.0f;
+const float speed = 0.1f;
 
 static void updateCamera() {
     cFront.X = cosf(pitch * oneRadian) * cosf(yaw * oneRadian);
@@ -79,16 +81,16 @@ static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
     updateCamera();
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        cP = addVec3(cP, mulVec3(0.1f, cFront));
+        cP = addVec3(cP, mulVec3(speed, cFront));
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        cP = subtractVec3(cP, mulVec3(0.1f, cFront));
+        cP = subtractVec3(cP, mulVec3(speed, cFront));
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        cP = subtractVec3(cP, mulVec3(0.1f, cRight));
+        cP = subtractVec3(cP, mulVec3(speed, cRight));
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        cP = addVec3(cP, mulVec3(0.1f, cRight));
+        cP = addVec3(cP, mulVec3(speed, cRight));
     }
 
     shaderData->lookAt = getLookAt(cP, addVec3(cP, cFront), cUp);
@@ -103,7 +105,7 @@ main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    GLFWwindow *window = glfwCreateWindow(nx, ny, "Ray GL", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(NX, NY, "Ray GL", NULL, NULL);
     if (!window) {
         printf("Could not init GLFW window\n");
         exit(-1);
@@ -123,7 +125,7 @@ main() {
     }
 
     ShaderData shaderData;
-    GLuint outputTextureId = createAndBindEmptyTexture(0, nx, ny);
+    GLuint outputTextureId = createAndBindEmptyTexture(0, NX, NY);
 
     int xSkyMap, ySkyMap, nSkyMap;
     stbi_set_flip_vertically_on_load(true);
@@ -135,7 +137,7 @@ main() {
     GLuint programId = shaderProgramFromShader(shaderId);
     glUseProgram(programId);
 
-    setupShaderData(nx, ny, xSkyMap, ySkyMap, &shaderData);
+    setupShaderData(NX, NY, xSkyMap, ySkyMap, &shaderData);
     GLuint ssbo = createAndBindSSBO(0, sizeof(shaderData), &shaderData);
 
     GLuint fboId = 0;
@@ -145,15 +147,16 @@ main() {
 
     while(!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
-        glDispatchCompute(nx/32, ny/32, 1);
+        glDispatchCompute(NX/32, NY/32, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-        glBlitFramebuffer(0, 0, nx, ny, 0, 0, nx, ny, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glBlitFramebuffer(0, 0, NX, NY, 0, 0, NX, NY, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         glfwSwapBuffers(window);
 
         glfwPollEvents();
         actOnInput(window, &shaderData);
 
-        updateSSBO(ssbo, sizeof(shaderData), &shaderData);
+        // No need to rebind the shader storage buffer since it's the only once we use.
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(shaderData), &shaderData);
     }
 
     glDeleteFramebuffers(1, &fboId);

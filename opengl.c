@@ -51,13 +51,6 @@ static GLuint createAndBindSSBO(GLuint ssboLocation, size_t bufferSize, void *bu
     return ssbo;
 }
 
-static void updateSSBO(GLuint ssbo, size_t bufferSize, void *buffer) {
-    // No need to bind the buffer for now since it's the only one we're using.
-    GLvoid *p = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-    memcpy(p, buffer, bufferSize);
-    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-}
-
 static GLuint shaderFromSource(char* name, char* path) {
     GLuint shaderId = glCreateShader(GL_COMPUTE_SHADER);
     char source[10240];
