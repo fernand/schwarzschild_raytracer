@@ -29,7 +29,7 @@ static GLuint createAndBindEmptyTexture(const GLuint texUnit, const int nx, cons
     return texture;
 }
 
-static GLuint createAndBindTextureFromImage(const GLuint texUnit, const int nx, const int ny, const u8 *data) {
+static GLuint createAndBindTextureFromImage(const GLuint texUnit, const int nx, const int ny, const unsigned char *data) {
     GLuint texture;
     glGenTextures(1, &texture);
     glActiveTexture(GL_TEXTURE0 + texUnit);

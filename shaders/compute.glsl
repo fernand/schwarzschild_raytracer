@@ -8,8 +8,10 @@ layout(std430, binding = 0) readonly buffer data
     float ny;
     float fxSkyMap;
     float fySkyMap;
-    vec4 eyeAndTanFov;
-    mat4 lookAt;
+    vec4 eyeAndHalfWidth;
+    vec4 u;
+    vec4 v;
+    vec4 w;
 };
 
 const float PI = 3.1415926535897932384626433832795;
@@ -26,18 +28,20 @@ void main() {
     vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
     int xSkyMap = int(fxSkyMap);
     int ySkyMap = int(fySkyMap);
-    float tanFov = eyeAndTanFov.w;
-    uint x = gl_GlobalInvocationID.x;
-    uint y = gl_GlobalInvocationID.y;
-    vec3 view = vec3(
-        (-float(x) / nx + 0.5) * tanFov,
-        ((float(y) / ny - 0.5) * ny / nx) * tanFov,
-        -1.0
-    );
-    view = normalize(mat3(lookAt) * view);
+    vec3 origin = eyeAndHalfWidth.xyz;
+    float halfWidth = eyeAndHalfWidth.w;
+    float halfHeight = halfWidth * float(ny) / nx;
+    float s = float(gl_GlobalInvocationID.x) / nx;
+    float t = float(gl_GlobalInvocationID.y) / ny;
 
-    vec3 velocity = view;
-    vec3 point = eyeAndTanFov.xyz;
+    vec3 lowerLeftCorner = origin - halfWidth * u.xyz - halfHeight * v.xyz - w.xyz;
+    vec3 horizontal = 2.0 * halfWidth * u.xyz;
+    vec3 vertical = 2.0 * halfHeight * v.xyz;
+
+    vec3 direction = lowerLeftCorner + s * horizontal + t * vertical - origin;
+
+    vec3 velocity = direction;
+    vec3 point = origin;
     vec3 prevPoint;
     float prevSqrNorm;
     float sqrNorm = dot(point, point);

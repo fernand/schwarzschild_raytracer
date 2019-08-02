@@ -9,53 +9,61 @@
 #include <stdbool.h>
 #include <math.h>
 
-#define M_PI 3.14159265358979323846f
-
-typedef unsigned char u8;
+#define PI 3.14159265358979323846f
 
 #include "io.c"
 #include "math.c"
 #include "opengl.c"
+
+#define NX 1920
+#define NY 1024
+float lastX = NX / 2, lastY = NY / 2;
+v3 cP, cFront, cRight, cUp, wUp;
+v3 u, v, w;
+
+const float oneRadian = PI / 180.0f;
+const float fov = 90.0f;
+bool cursorPosSet = false;
+float yaw = 90.f, pitch = 0.f;
+const float speed = 0.1f;
+
+static void updateCamera() {
+    cFront.x = cosf(pitch * oneRadian) * cosf(yaw * oneRadian);
+    cFront.y = sinf(pitch * oneRadian);
+    cFront.z = cosf(pitch * oneRadian) * sinf(yaw * oneRadian);
+    cFront = normalizeV3(cFront);
+    cRight = normalizeV3(crossV3(cFront, wUp));
+    cUp = normalizeV3(crossV3(cRight, cFront));
+    w = normalizeV3(subtractV3(cP, addV3(cP, cFront)));
+    u = normalizeV3(crossV3(cUp, w));
+    v = crossV3(w, u);
+}
 
 typedef struct {
     float nx;
     float ny;
     float xSkyMap;
     float ySkyMap;
-    vec3 eye;
-    float tanFov;
-    mat4 lookAt;
+    v3 eye;
+    float halfWidth;
+    v4 u;
+    v4 v;
+    v4 w;
 } ShaderData;
 
-#define NX 1920
-#define NY 1024
-float lastX = NX / 2, lastY = NY / 2;
-vec3 cP, cFront, cRight, cUp, wUp;
-bool cursorPosSet = false;
-float yaw = 90.f, pitch = 0.f;
-const float oneRadian = M_PI / 180.0f;
-const float speed = 0.1f;
-
-static void updateCamera() {
-    cFront.X = cosf(pitch * oneRadian) * cosf(yaw * oneRadian);
-    cFront.Y = sinf(pitch * oneRadian);
-    cFront.Z = cosf(pitch * oneRadian) * sinf(yaw * oneRadian);
-    cFront = normalizeVec3(cFront);
-    cRight = normalizeVec3(crossVec3(cFront, wUp));
-    cUp = normalizeVec3(crossVec3(cRight, cFront));
-}
-
 static setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap, ShaderData *shaderData) {
-    cP = newVec3(0.0f, 1.0f, -20.0f);
-    wUp = newVec3(0.2f, 1.0f, 0.0f);
+    cP = newV3(0.0f, 1.0f, -20.0f);
+    wUp = newV3(0.2f, 1.0f, 0.0f);
     updateCamera();
     shaderData->nx = (float)nx;
     shaderData->ny = (float)ny;
     shaderData->xSkyMap = (float)xSkyMap;
     shaderData->ySkyMap = (float)ySkyMap;
     shaderData->eye = cP;
-    shaderData->tanFov = tan(oneRadian) * 90.f;
-    shaderData->lookAt = getLookAt(cP, addVec3(cP, cFront), cUp);
+    shaderData->halfWidth = tanf(fov * PI / (180.f * 2.0f));
+    shaderData->u = fromV3(u);
+    shaderData->v = fromV3(v);
+    shaderData->w = fromV3(w);
 }
 
 static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
@@ -66,7 +74,7 @@ static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
         lastY = ypos;
         cursorPosSet = true;
     }
-    float xOffset = lastX - xpos;
+    float xOffset = xpos - lastX;
     float yOffset = lastY - ypos;
     lastX = xpos;
     lastY = ypos;
@@ -81,20 +89,22 @@ static actOnInput(GLFWwindow *window, ShaderData *shaderData) {
     updateCamera();
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        cP = addVec3(cP, mulVec3(speed, cFront));
+        cP = addV3(cP, mulV3(speed, cFront));
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        cP = subtractVec3(cP, mulVec3(speed, cFront));
+        cP = subtractV3(cP, mulV3(speed, cFront));
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        cP = subtractVec3(cP, mulVec3(speed, cRight));
+        cP = subtractV3(cP, mulV3(speed, cRight));
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        cP = addVec3(cP, mulVec3(speed, cRight));
+        cP = addV3(cP, mulV3(speed, cRight));
     }
 
-    shaderData->lookAt = getLookAt(cP, addVec3(cP, cFront), cUp);
     shaderData->eye = cP;
+    shaderData->u = fromV3(u);
+    shaderData->v = fromV3(v);
+    shaderData->w = fromV3(w);
 }
 
 main() {
@@ -129,7 +139,7 @@ main() {
 
     int xSkyMap, ySkyMap, nSkyMap;
     stbi_set_flip_vertically_on_load(true);
-    u8 *skyMap = stbi_load("data/sky8k.jpg", &xSkyMap, &ySkyMap, &nSkyMap, STBI_rgb_alpha);
+    unsigned char *skyMap = stbi_load("data/sky8k.jpg", &xSkyMap, &ySkyMap, &nSkyMap, STBI_rgb_alpha);
     GLuint skyMapTextureId = createAndBindTextureFromImage(1, xSkyMap, ySkyMap, skyMap);
     stbi_image_free(skyMap);
 
