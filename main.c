@@ -22,7 +22,7 @@ v3 cP, cFront, cRight, cUp, wUp;
 v3 u, v, w;
 
 const float oneRadian = PI / 180.0f;
-const float fov = 90.0f;
+const float fov = 75.0f;
 bool cursorPosSet = false;
 float yaw = -90.f, pitch = 0.f;
 const float speed = 0.1f;
