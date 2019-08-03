@@ -23,9 +23,9 @@ const float fov = 75.0f;
 const float speed = 0.1f;
 const float sensitivity = 0.05f;
 
-bool cursorPosSet = false;
 float yaw = -90.f, pitch = 0.f;
 double lastX = NX / 2, lastY = NY / 2;
+bool cursorPosSet = false;
 
 v3 cP, cFront, cRight, cUp, wUp;
 v3 u, v, w;
