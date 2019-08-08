@@ -70,14 +70,14 @@ void main() {
                 color = imageLoad(skyMap, ivec2(u, v));
             }
             break;
-        } else if (point.z >= 9. && point.z <= 10. && abs(point.x + 2.) <= 1. && abs(point.y + 2.) <= 1.) {
-            //color = mix(vec4(1.0, 0.0, 0.0, 1.0), color, color.a);
-            color = vec4(1.0, 0.0, 0.0, 1.0);
         } else if (sqrNorm < 1. && prevSqrNorm > 1.) {
             if (crossedAccretion) {
                 color = mix(vec4(0.0, 0.0, 0.0, 1.0) ,color, color.a);
             }
             break;
+        } else if (point.z >= -10. && point.z <= -9. && abs(point.x + 2.) <= 1. && abs(point.y + 2.) <= 1.) {
+            //color = mix(vec4(1.0, 0.0, 0.0, 1.0), color, color.a);
+            color = vec4(1.0, 0.0, 0.0, 1.0);
         } else if (sqrNorm >= D_INNER_R2 && sqrNorm <= D_OUTER_R2 && ((prevPoint.y > 0. && point.y < 0.) || (prevPoint.y < 0. && point.y > 0.))) {
             if (!crossedAccretion) {
                 color = vec4(1.0, 1.0, 0.98, 0.0);

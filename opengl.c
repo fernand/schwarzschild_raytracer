@@ -18,7 +18,7 @@ static void ck() {
     exit(-1);
 }
 
-static GLuint createAndBindEmptyTexture(const GLuint texUnit, const int nx, const int ny) {
+static GLuint createAndBindEmptyTexture(GLuint texUnit, int nx, int ny) {
     GLuint texture;
     glGenTextures(1, &texture);
     glActiveTexture(GL_TEXTURE0 + texUnit);
@@ -29,7 +29,7 @@ static GLuint createAndBindEmptyTexture(const GLuint texUnit, const int nx, cons
     return texture;
 }
 
-static GLuint createAndBindTextureFromImage(const GLuint texUnit, const int nx, const int ny, const unsigned char *data) {
+static GLuint createAndBindTextureFromImage(GLuint texUnit, int nx, int ny, unsigned char *data) {
     GLuint texture;
     glGenTextures(1, &texture);
     glActiveTexture(GL_TEXTURE0 + texUnit);
