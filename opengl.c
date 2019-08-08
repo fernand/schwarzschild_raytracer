@@ -51,8 +51,8 @@ static GLuint createAndBindSSBO(GLuint ssboLocation, size_t bufferSize, void *bu
     return ssbo;
 }
 
-static GLuint shaderFromSource(char* name, char* path) {
-    GLuint shaderId = glCreateShader(GL_COMPUTE_SHADER);
+static GLuint shaderFromSource(char* name, GLenum shaderType, char* path) {
+    GLuint shaderId = glCreateShader(shaderType);
     char source[10240];
     int len = 10240;
     getFileContents(path, source, &len);
@@ -85,6 +85,28 @@ static GLuint shaderProgramFromShader(GLuint shaderId) {
         exit(-1);
     }
     glDetachShader(programId, shaderId);
+    return programId;
+}
+
+static GLuint shaderProgramFromShaders(GLuint shader1, GLuint shader2) {
+    GLuint programId = glCreateProgram();
+    GLuint shaders[2];
+    shaders[0] = shader1;
+    shaders[1] = shader2;
+    for (int i=0; i<2; i++) {
+        GLuint shaderId = shaders[i];
+        glAttachShader(programId, shaderId);
+        glLinkProgram(programId);
+        GLint programStatus;
+        glGetProgramiv(programId, GL_LINK_STATUS, &programStatus);
+        if (programStatus != 1) {
+            char infoLog[512];
+            glGetProgramInfoLog(programId, 512, NULL, infoLog);
+            printf("Shader program link failed: %s\n", infoLog);
+            exit(-1);
+        }
+        glDetachShader(programId, shaderId);
+    }
     return programId;
 }
 

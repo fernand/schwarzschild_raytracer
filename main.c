@@ -55,7 +55,7 @@ typedef struct {
 } ShaderData;
 
 static void setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap, ShaderData *shaderData) {
-    cP = newV3(0.0f, 1.0f, 20.0f);
+    cP = newV3(-2.0f, 1.0f, 20.0f);
     wUp = newV3(0.2f, 1.0f, 0.0f);
     updateCamera();
     shaderData->nx = (float)nx;
@@ -146,9 +146,8 @@ void main() {
     GLuint skyMapTextureId = createAndBindTextureFromImage(1, xSkyMap, ySkyMap, skyMap);
     stbi_image_free(skyMap);
 
-    GLuint shaderId = shaderFromSource("rayTracer", "shaders/compute.glsl");
+    GLuint shaderId = shaderFromSource("rayTracer", GL_COMPUTE_SHADER, "shaders/compute.glsl");
     GLuint programId = shaderProgramFromShader(shaderId);
-    glUseProgram(programId);
 
     setupShaderData(NX, NY, xSkyMap, ySkyMap, &shaderData);
     GLuint ssbo = createAndBindSSBO(0, sizeof(shaderData), &shaderData);
@@ -158,18 +157,50 @@ void main() {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fboId);
     glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, outputTextureId, 0);
 
+    GLuint vertexArrayId;
+    glGenVertexArrays(1, &vertexArrayId);
+    glBindVertexArray(vertexArrayId);
+    GLfloat lineData[] = {
+        -1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f
+    };
+    GLuint vboId;
+    glGenBuffers(1, &vboId);
+    glBindBuffer(GL_ARRAY_BUFFER, vboId);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(lineData), lineData, GL_DYNAMIC_DRAW);
+
+    GLuint vsShaderId = shaderFromSource("laserVs", GL_VERTEX_SHADER, "shaders/laser.vs");
+    GLuint fsShaderId = shaderFromSource("laserFs", GL_FRAGMENT_SHADER, "shaders/laser.fs");
+    GLuint laserProgramId = shaderProgramFromShaders(vsShaderId, fsShaderId);
+
+    GLenum err = glGetError();
+    GLenum noErr = GL_NO_ERROR;
     while(!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
+        err = glGetError();
+        glUseProgram(programId);
         glDispatchCompute(NX/32, NY/32, 1);
+        err = glGetError();
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        err = glGetError();
         glBlitFramebuffer(0, 0, NX, NY, 0, 0, NX, NY, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        err = glGetError();
+        
+        glUseProgram(laserProgramId);
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, vboId);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+        glDrawArrays(GL_LINE_STRIP, 0, 2);
+        glDisableVertexAttribArray(0);
+
         glfwSwapBuffers(window);
 
         glfwPollEvents();
-        actOnInput(window, &shaderData);
+        //actOnInput(window, &shaderData);
 
         // No need to rebind the shader storage buffer since it's the only once we use.
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(shaderData), &shaderData);
+        err = glGetError();
     }
 
     glDeleteFramebuffers(1, &fboId);
@@ -177,5 +208,8 @@ void main() {
     glDeleteTextures(1, &skyMapTextureId);
     glDeleteShader(shaderId);
     glDeleteProgram(programId);
+    glDeleteShader(vsShaderId);
+    glDeleteShader(fsShaderId);
+    glDeleteProgram(laserProgramId);
     glfwTerminate();
 }
