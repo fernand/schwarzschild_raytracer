@@ -18,6 +18,10 @@
 #define NX 1920
 #define NY 1024
 
+const int max_iter = 10000;
+const float step = 0.16f;
+const float potentialCoef = -1.5f;
+
 const float oneRadian = PI / 180.0f;
 const float fov = 75.0f;
 const float speed = 0.1f;
@@ -150,9 +154,9 @@ void main() {
     GLuint programId = shaderProgramFromShader(shaderId);
 
     setupShaderData(NX, NY, xSkyMap, ySkyMap, &shaderData);
-    GLuint ssbo = createAndBindSSBO(0, sizeof(shaderData), &shaderData);
+    GLuint ssboId = createAndBindSSBO(0, sizeof(shaderData), &shaderData);
 
-    GLuint fboId = 0;
+    GLuint fboId;
     glGenFramebuffers(1, &fboId);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fboId);
     glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, outputTextureId, 0);
@@ -160,47 +164,58 @@ void main() {
     GLuint vertexArrayId;
     glGenVertexArrays(1, &vertexArrayId);
     glBindVertexArray(vertexArrayId);
-    GLfloat lineData[] = {
-        -1.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f
-    };
+    GLfloat *trail = calloc(3*10000*sizeof(GLfloat), sizeof(GLfloat));
+    // Find the correct first point depending on the camera.
+    v3 laserPoint = addV3(cP, cFront);
+    v3 laserVelocity = cFront;
+    v3 laserCrossed = crossV3(laserPoint, laserVelocity);
+    float laserH2 = dotV3(laserCrossed, laserCrossed);
+    memcpy(trail, &laserPoint, sizeof(laserPoint));
+    GLint trailNumPoints = 1;
     GLuint vboId;
     glGenBuffers(1, &vboId);
     glBindBuffer(GL_ARRAY_BUFFER, vboId);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(lineData), lineData, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 3*10000*sizeof(GLfloat), trail, GL_STREAM_DRAW);
 
     GLuint vsShaderId = shaderFromSource("laserVs", GL_VERTEX_SHADER, "shaders/laser.vs");
     GLuint fsShaderId = shaderFromSource("laserFs", GL_FRAGMENT_SHADER, "shaders/laser.fs");
     GLuint laserProgramId = shaderProgramFromShaders(vsShaderId, fsShaderId);
 
-    GLenum err = glGetError();
-    GLenum noErr = GL_NO_ERROR;
     while(!glfwWindowShouldClose(window)) {
+        //actOnInput(window, &shaderData);
+
+        if (trailNumPoints < 3 * 9900) {
+            for (int i=0; i<100; i++) {
+                laserPoint = addV3(laserPoint, mulV3(step, laserVelocity));
+                float sqrNorm = dotV3(laserPoint, laserPoint);
+                v3 laserAccel = mulV3(potentialCoef * laserH2 / powf(sqrNorm, 2.5), laserPoint);
+                laserVelocity = addV3(laserVelocity, mulV3(step, laserAccel));
+                memcpy(&trail[3*trailNumPoints], &laserPoint, sizeof(laserPoint));
+                trailNumPoints++;
+            }
+        }
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboId);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(shaderData), &shaderData);
+        glBindBuffer(GL_ARRAY_BUFFER, vboId);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat)*3, &trail[3*trailNumPoints]);
+
         glClear(GL_COLOR_BUFFER_BIT);
-        err = glGetError();
         glUseProgram(programId);
         glDispatchCompute(NX/32, NY/32, 1);
-        err = glGetError();
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-        err = glGetError();
         glBlitFramebuffer(0, 0, NX, NY, 0, 0, NX, NY, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-        err = glGetError();
         
         glUseProgram(laserProgramId);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, vboId);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
-        glDrawArrays(GL_LINE_STRIP, 0, 2);
+        glDrawArrays(GL_LINE_STRIP, 0, trailNumPoints);
         glDisableVertexAttribArray(0);
 
         glfwSwapBuffers(window);
 
         glfwPollEvents();
-        //actOnInput(window, &shaderData);
-
-        // No need to rebind the shader storage buffer since it's the only once we use.
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(shaderData), &shaderData);
-        err = glGetError();
     }
 
     glDeleteFramebuffers(1, &fboId);
@@ -212,4 +227,5 @@ void main() {
     glDeleteShader(fsShaderId);
     glDeleteProgram(laserProgramId);
     glfwTerminate();
+    free(trail);
 }

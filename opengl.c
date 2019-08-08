@@ -42,13 +42,13 @@ static GLuint createAndBindTextureFromImage(GLuint texUnit, int nx, int ny, unsi
 }
 
 static GLuint createAndBindSSBO(GLuint ssboLocation, size_t bufferSize, void *buffer) {
-    GLuint ssbo;
-    glGenBuffers(1, &ssbo);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+    GLuint ssboId;
+    glGenBuffers(1, &ssboId);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboId);
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, buffer, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssboLocation, ssbo);
-    return ssbo;
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssboLocation, ssboId);
+    return ssboId;
 }
 
 static GLuint shaderFromSource(char* name, GLenum shaderType, char* path) {
