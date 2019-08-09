@@ -23,7 +23,7 @@ const float step = 0.16f;
 const float potentialCoef = -1.5f;
 
 const float oneRadian = PI / 180.0f;
-const float fov = 75.0f;
+const float fovy = 45.0f;
 const float speed = 0.1f;
 const float sensitivity = 0.05f;
 
@@ -52,7 +52,7 @@ typedef struct {
     float xSkyMap;
     float ySkyMap;
     v3 eye;
-    float halfWidth;
+    float halfHeight;
     v4 u;
     v4 v;
     v4 w;
@@ -67,7 +67,7 @@ static void setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap, ShaderData
     shaderData->xSkyMap = (float)xSkyMap;
     shaderData->ySkyMap = (float)ySkyMap;
     shaderData->eye = cP;
-    shaderData->halfWidth = tanf(fov * PI / (180.f * 2.0f));
+    shaderData->halfHeight = tanf(fovy * PI / (180.f * 2.0f));
     shaderData->u = fromV3(u);
     shaderData->v = fromV3(v);
     shaderData->w = fromV3(w);
@@ -165,13 +165,19 @@ void main() {
     glGenVertexArrays(1, &vertexArrayId);
     glBindVertexArray(vertexArrayId);
     GLfloat *trail = calloc(3*10000*sizeof(GLfloat), sizeof(GLfloat));
+
     // Find the correct first point depending on the camera.
-    v3 laserPoint = addV3(cP, cFront);
+    v3 laserP = addV3(cP, cFront);
     v3 laserVelocity = cFront;
-    v3 laserCrossed = crossV3(laserPoint, laserVelocity);
+    v3 laserCrossed = crossV3(laserP, laserVelocity);
     float laserH2 = dotV3(laserCrossed, laserCrossed);
-    memcpy(trail, &laserPoint, sizeof(laserPoint));
+    v3 laserPCam;
+    laserPCam.x = u.x * laserP.x + v.x * laserP.y + w.x * laserP.z;
+    laserPCam.y = u.y * laserP.x + v.y * laserP.y + w.y * laserP.z;
+    laserPCam.z = 0.0;
+    memcpy(trail, &laserPCam, sizeof(laserPCam));
     GLint trailNumPoints = 1;
+
     GLuint vboId;
     glGenBuffers(1, &vboId);
     glBindBuffer(GL_ARRAY_BUFFER, vboId);
@@ -186,11 +192,17 @@ void main() {
 
         if (trailNumPoints < 3 * 9900) {
             for (int i=0; i<100; i++) {
-                laserPoint = addV3(laserPoint, mulV3(step, laserVelocity));
-                float sqrNorm = dotV3(laserPoint, laserPoint);
-                v3 laserAccel = mulV3(potentialCoef * laserH2 / powf(sqrNorm, 2.5), laserPoint);
+                laserP = addV3(laserP, mulV3(step, laserVelocity));
+                float sqrNorm = dotV3(laserP, laserP);
+                v3 laserAccel = mulV3(potentialCoef * laserH2 / powf(sqrNorm, 2.5), laserP);
                 laserVelocity = addV3(laserVelocity, mulV3(step, laserAccel));
-                memcpy(&trail[3*trailNumPoints], &laserPoint, sizeof(laserPoint));
+                // view matrix
+                laserPCam.x = u.x * laserP.x + u.y * laserP.y + u.z * laserP.z -dotV3(u, cP);
+                laserPCam.y = v.x * laserP.x + v.y * laserP.y + v.z * laserP.z -dotV3(v, cP);
+                laserPCam.z = w.x * laserP.x + w.y * laserP.y + w.z * laserP.z -dotV3(w, cP);
+                // orthographic projection
+                //laserPCam.x = 
+                memcpy(&trail[3*trailNumPoints], &laserPCam, sizeof(laserPCam));
                 trailNumPoints++;
             }
         }

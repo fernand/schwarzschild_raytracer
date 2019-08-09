@@ -1,11 +1,11 @@
 typedef union {
     struct {
-        float x, y, z;
+        GLfloat x, y, z;
     };
-    float e[3];
+    GLfloat e[3];
 } v3;
 
-static inline v3 newV3(float x, float y, float z) {
+static inline v3 newV3(GLfloat x, GLfloat y, GLfloat z) {
     v3 result;
     result.x = x;
     result.y = y;
@@ -13,7 +13,7 @@ static inline v3 newV3(float x, float y, float z) {
     return result;
 }
 
-static inline v3 mulV3(float a, v3 u) {
+static inline v3 mulV3(GLfloat a, v3 u) {
     v3 result;
     result.x = a * u.x;
     result.y = a * u.y;
@@ -37,7 +37,7 @@ static inline v3 subtractV3(v3 u, v3 v) {
     return result;
 }
 
-static inline float dotV3(v3 u, v3 v) {
+static inline GLfloat dotV3(v3 u, v3 v) {
     return u.x * v.x + u.y * v.y + u.z * v.z;
 }
 
@@ -51,7 +51,7 @@ static inline v3 crossV3(v3 u, v3 v) {
 
 static inline v3 normalizeV3(v3 v) {
     v3 result = {0};
-    float norm = sqrtf(dotV3(v, v));
+    GLfloat norm = sqrtf(dotV3(v, v));
     if (norm > 0.0001f * 0.0001f) {
         result.x = v.x / norm;
         result.y = v.y / norm;
@@ -62,9 +62,9 @@ static inline v3 normalizeV3(v3 v) {
 
 typedef union {
     struct {
-        float x, y, z, w;
+        GLfloat x, y, z, w;
     };
-    float e[4];
+    GLfloat e[4];
 } v4;
 
 static inline v4 fromV3(v3 v) {

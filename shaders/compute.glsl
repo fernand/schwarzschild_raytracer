@@ -8,7 +8,7 @@ layout(std430, binding = 0) readonly buffer data
     float ny;
     float fxSkyMap;
     float fySkyMap;
-    vec4 eyeAndHalfWidth;
+    vec4 eyeAndHalfHeight;
     vec4 u;
     vec4 v;
     vec4 w;
@@ -28,9 +28,9 @@ void main() {
     vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
     int xSkyMap = int(fxSkyMap);
     int ySkyMap = int(fySkyMap);
-    vec3 origin = eyeAndHalfWidth.xyz;
-    float halfWidth = eyeAndHalfWidth.w;
-    float halfHeight = halfWidth * float(ny) / nx;
+    vec3 origin = eyeAndHalfHeight.xyz;
+    float halfHeight = eyeAndHalfHeight.w;
+    float halfWidth = halfHeight * float(nx) / ny;
     float s = float(gl_GlobalInvocationID.x) / nx;
     float t = float(gl_GlobalInvocationID.y) / ny;
 
