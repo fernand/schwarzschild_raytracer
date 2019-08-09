@@ -164,7 +164,7 @@ void main() {
     GLuint vertexArrayId;
     glGenVertexArrays(1, &vertexArrayId);
     glBindVertexArray(vertexArrayId);
-    GLfloat *trail = calloc(3*10000*sizeof(GLfloat), sizeof(GLfloat));
+    float *trail = calloc(3*10000*sizeof(float), sizeof(float));
 
     // Find the correct first point depending on the camera.
     v3 laserP = addV3(cP, cFront);
@@ -181,7 +181,7 @@ void main() {
     GLuint vboId;
     glGenBuffers(1, &vboId);
     glBindBuffer(GL_ARRAY_BUFFER, vboId);
-    glBufferData(GL_ARRAY_BUFFER, 3*10000*sizeof(GLfloat), trail, GL_STREAM_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 3*10000*sizeof(float), trail, GL_STREAM_DRAW);
 
     GLuint vsShaderId = shaderFromSource("laserVs", GL_VERTEX_SHADER, "shaders/laser.vs");
     GLuint fsShaderId = shaderFromSource("laserFs", GL_FRAGMENT_SHADER, "shaders/laser.fs");
@@ -215,7 +215,7 @@ void main() {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboId);
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(shaderData), &shaderData);
         glBindBuffer(GL_ARRAY_BUFFER, vboId);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat)*3, &trail[3*trailNumPoints]);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float)*3, &trail[3*trailNumPoints]);
 
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(programId);
