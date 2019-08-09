@@ -201,7 +201,12 @@ void main() {
                 laserPCam.y = v.x * laserP.x + v.y * laserP.y + v.z * laserP.z -dotV3(v, cP);
                 laserPCam.z = w.x * laserP.x + w.y * laserP.y + w.z * laserP.z -dotV3(w, cP);
                 // orthographic projection
-                //laserPCam.x = 
+                float f = 1 / shaderData.halfHeight;
+                float zFar = 100.0f, zNear = 0.1f;
+                float aspect = (float)NX / NY;
+                laserPCam.x = (f / aspect) * laserPCam.x;
+                laserPCam.y = f * laserPCam.y;
+                laserPCam.z = ((zFar+zNear)/(zNear-zFar)) * laserPCam.z + (2*zFar*zNear)/(zNear-zFar);
                 memcpy(&trail[3*trailNumPoints], &laserPCam, sizeof(laserPCam));
                 trailNumPoints++;
             }
