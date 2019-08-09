@@ -29,7 +29,8 @@ const float fovy = 45.0f;
 const float speed = 0.1f;
 const float sensitivity = 0.05f;
 
-float yaw = -90.f, pitch = -10.0f;
+//float yaw = -90.f, pitch = 0.0f;
+float yaw = -90.f, pitch = -11.0f;
 double lastX = NX / 2, lastY = NY / 2;
 bool cursorPosSet = false;
 
@@ -61,7 +62,7 @@ typedef struct {
 } ShaderData;
 
 static void setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap, ShaderData *shaderData) {
-    cP = newV3(0.0f, 1.0f, 20.0f);
+    cP = newV3(0.0f, 0.0f, 20.0f);
     wUp = newV3(0.2f, 1.0f, 0.0f);
     updateCamera();
     shaderData->nx = (float)nx;
@@ -212,11 +213,11 @@ void main() {
     GLuint laserProgramId = shaderProgramFromShaders(vsShaderId, fsShaderId);
 
     //while(!glfwWindowShouldClose(window)) {
-    for (int a=0; a<1000; a++) {
+    for (int a=0; a<10000; a++) {
         actOnInput(window, &shaderData);
 
         if (trailNumPoints < 3 * 9900) {
-            for (int i=0; i<10; i++) {
+            for (int i=0; i<4; i++) {
                 laserP = addV3(laserP, mulV3(step, laserVelocity));
                 float sqrNorm = dotV3(laserP, laserP);
                 v3 laserAccel = mulV3(potentialCoef * laserH2 / powf(sqrNorm, 2.5), laserP);
