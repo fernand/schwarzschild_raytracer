@@ -205,7 +205,7 @@ void main() {
     glBindBuffer(GL_ARRAY_BUFFER, vboId);
     glBufferData(GL_ARRAY_BUFFER, 3*10000*sizeof(float), trail, GL_STREAM_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, trailNumPoints, GL_FLOAT, GL_FALSE, 0, (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
     GLuint vsShaderId = shaderFromSource("laserVs", GL_VERTEX_SHADER, "shaders/laser.vs");
     GLuint fsShaderId = shaderFromSource("laserFs", GL_FRAGMENT_SHADER, "shaders/laser.fs");
@@ -213,7 +213,7 @@ void main() {
 
     //while(!glfwWindowShouldClose(window)) {
     for (int a=0; a<1000; a++) {
-        //actOnInput(window, &shaderData);
+        actOnInput(window, &shaderData);
 
         if (trailNumPoints < 3 * 9900) {
             for (int i=0; i<10; i++) {
