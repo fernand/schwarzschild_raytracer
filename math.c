@@ -1,3 +1,5 @@
+#define TOLERANCE 0.0001f
+
 typedef union {
     struct {
         float x, y, z;
@@ -52,7 +54,7 @@ static inline v3 crossV3(v3 u, v3 v) {
 static inline v3 normalizeV3(v3 v) {
     v3 result = {0};
     float norm = sqrtf(dotV3(v, v));
-    if (norm > 0.0001f * 0.0001f) {
+    if (norm > TOLERANCE * TOLERANCE) {
         result.x = v.x / norm;
         result.y = v.y / norm;
         result.z = v.z / norm;
@@ -70,9 +72,16 @@ static inline v3 lookAt(v3 cP, v3 u, v3 v, v3 w, v3 p) {
 
 static inline v3 perspective(float f, float aspect, float zNear, float zFar, v3 p) {
     v3 result;
-    result.x = (f / aspect) * p.x / p.z;
-    result.y = f * p.y / p.z;
-    result.z = ((zFar+zNear)/(zNear-zFar) * p.z + (2*zFar*zNear)/(zNear-zFar)) / p.z;
+    if (fabsf(p.z) < TOLERANCE) {
+        result.x = (f / aspect) * p.x;
+        result.y = f * p.y;
+        result.z = 1.0f;
+    } else {
+        result.x = (f / aspect) * p.x / (-p.z);
+        result.y = f * p.y / (-p.z);
+        //result.z = (zFar+zNear)/(zNear-zFar) * p.z + (2*zFar*zNear)/(zNear-zFar);
+        result.z = 1.0f;
+    }
     return result;
 }
 
