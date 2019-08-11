@@ -28,8 +28,8 @@ const float fovy = 45.0f;
 const float speed = 0.1f;
 const float sensitivity = 0.05f;
 
-//float yaw = -90.f, pitch = 0.0f;
-float yaw = -90.f, pitch = -11.0f;
+float yaw = -90.f, pitch = 0.0f;
+//float yaw = -90.f, pitch = -11.0f;
 double lastX = NX / 2, lastY = NY / 2;
 bool cursorPosSet = false;
 
