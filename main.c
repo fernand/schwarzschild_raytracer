@@ -145,19 +145,45 @@ void main() {
     }
 
     ShaderData shaderData;
-    GLuint outputTextureId = createAndBindEmptyTexture(0, NX, NY);
+    // Create and bind and empty texture
+    GLuint outputTextureUnit = 0;
+    GLuint outputTextureId;
+    glGenTextures(1, &outputTextureId);
+    glActiveTexture(GL_TEXTURE0 + outputTextureUnit);
+    glBindTexture(GL_TEXTURE_2D, outputTextureId);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, NX, NY, 0, GL_RGBA, GL_FLOAT, NULL);
+    glBindImageTexture(outputTextureUnit, outputTextureId, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
     int xSkyMap, ySkyMap, nSkyMap;
     stbi_set_flip_vertically_on_load(true);
     unsigned char *skyMap = stbi_load("data/sky8k.jpg", &xSkyMap, &ySkyMap, &nSkyMap, STBI_rgb_alpha);
-    GLuint skyMapTextureId = createAndBindTextureFromImage(1, xSkyMap, ySkyMap, skyMap);
+
+    // Create and bind a texture from the skymap image
+    GLuint skyMapTextureUnit = 1;
+    GLuint skyMapTextureId;
+    glGenTextures(1, &skyMapTextureId);
+    glActiveTexture(GL_TEXTURE0 + skyMapTextureUnit);
+    glBindTexture(GL_TEXTURE_2D, skyMapTextureId);
+    // Todo: try to use skyMapTextureId samplers instead of the raw image to remove glistening?
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, xSkyMap, ySkyMap, 0, GL_RGBA, GL_UNSIGNED_BYTE, skyMap);
+    glBindImageTexture(skyMapTextureUnit, skyMapTextureId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+
     stbi_image_free(skyMap);
 
     GLuint shaderId = shaderFromSource("rayTracer", GL_COMPUTE_SHADER, "shaders/compute.glsl");
     GLuint programId = shaderProgramFromShader(shaderId);
 
     setupShaderData(NX, NY, xSkyMap, ySkyMap, &shaderData);
-    GLuint ssboId = createAndBindSSBO(0, sizeof(shaderData), &shaderData);
+
+    GLuint ssboLocation = 0;
+    GLuint ssboId;
+    glGenBuffers(1, &ssboId);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboId);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(shaderData), &shaderData, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssboLocation, ssboId);
 
     GLuint fboId;
     glGenFramebuffers(1, &fboId);

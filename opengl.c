@@ -18,39 +18,6 @@ static void ck() {
     exit(-1);
 }
 
-static GLuint createAndBindEmptyTexture(GLuint texUnit, int nx, int ny) {
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glActiveTexture(GL_TEXTURE0 + texUnit);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, nx, ny, 0, GL_RGBA, GL_FLOAT, NULL);
-    glBindImageTexture(texUnit, texture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-    return texture;
-}
-
-static GLuint createAndBindTextureFromImage(GLuint texUnit, int nx, int ny, unsigned char *data) {
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glActiveTexture(GL_TEXTURE0 + texUnit);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    // Todo: try to use texture samplers instead of the raw image to remove glistening?
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, nx, ny, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    glBindImageTexture(texUnit, texture, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-    return texture;
-}
-
-static GLuint createAndBindSSBO(GLuint ssboLocation, size_t bufferSize, void *buffer) {
-    GLuint ssboId;
-    glGenBuffers(1, &ssboId);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboId);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, buffer, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssboLocation, ssboId);
-    return ssboId;
-}
-
 static GLuint shaderFromSource(char* name, GLenum shaderType, char* path) {
     GLuint shaderId = glCreateShader(shaderType);
     char source[10240];
