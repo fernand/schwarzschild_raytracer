@@ -61,19 +61,21 @@ typedef struct {
     v4 w;
 } ShaderData;
 
-static void setupShaderData(int nx, int ny, int xSkyMap, int ySkyMap, ShaderData *shaderData) {
+static ShaderData initShaderData(int nx, int ny, int xSkyMap, int ySkyMap) {
+    ShaderData shaderData;
     cP = newV3(0.0f, 0.0f, 20.0f);
     wUp = newV3(0.2f, 1.0f, 0.0f);
     updateCamera();
-    shaderData->nx = (float)nx;
-    shaderData->ny = (float)ny;
-    shaderData->xSkyMap = (float)xSkyMap;
-    shaderData->ySkyMap = (float)ySkyMap;
-    shaderData->eye = cP;
-    shaderData->halfHeight = tanf(fovy * PI / (180.f * 2.0f));
-    shaderData->u = fromV3(u);
-    shaderData->v = fromV3(v);
-    shaderData->w = fromV3(w);
+    shaderData.nx = (float)nx;
+    shaderData.ny = (float)ny;
+    shaderData.xSkyMap = (float)xSkyMap;
+    shaderData.ySkyMap = (float)ySkyMap;
+    shaderData.eye = cP;
+    shaderData.halfHeight = tanf(fovy * PI / (180.f * 2.0f));
+    shaderData.u = fromV3(u);
+    shaderData.v = fromV3(v);
+    shaderData.w = fromV3(w);
+    return shaderData;
 }
 
 static void actOnInput(GLFWwindow *window, ShaderData *shaderData) {
@@ -144,7 +146,6 @@ void main() {
         exit(-1);
     }
 
-    ShaderData shaderData;
     // Create and bind and empty texture
     GLuint outputTextureUnit = 0;
     GLuint outputTextureId;
@@ -175,8 +176,9 @@ void main() {
     GLuint shaderId = shaderFromSource("rayTracer", GL_COMPUTE_SHADER, "shaders/compute.glsl");
     GLuint programId = shaderProgramFromShader(shaderId);
 
-    setupShaderData(NX, NY, xSkyMap, ySkyMap, &shaderData);
+    ShaderData shaderData = initShaderData(NX, NY, xSkyMap, ySkyMap);
 
+    // Create and bind the SSBO
     GLuint ssboLocation = 0;
     GLuint ssboId;
     glGenBuffers(1, &ssboId);
