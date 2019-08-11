@@ -273,9 +273,7 @@ void main() {
             }
         }
 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboId);
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(shaderData), &shaderData);
-        glBindBuffer(GL_ARRAY_BUFFER, vboId);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float)*3*trailNumPoints, trail);
 
         glClear(GL_COLOR_BUFFER_BIT);
