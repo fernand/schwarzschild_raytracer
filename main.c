@@ -226,7 +226,7 @@ void main() {
     while(!glfwWindowShouldClose(window)) {
         actOnInput(window, &shaderData);
 
-        if (trailNumPoints < 3 * 9900) {
+        if (trailNumPoints < TRAIL_LEN) {
             for (int i=0; i<4; i++) {
                 laserP = addV3(laserP, mulV3(step, laserVelocity));
                 v3 laserAccel = mulV3(potentialCoef * laserH2 / powf(dotV3(laserP, laserP), 2.5), laserP);
