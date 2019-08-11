@@ -127,7 +127,7 @@ void main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    GLFWwindow *window = glfwCreateWindow(NX, NY, "Ray GL", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(NX, NY, "Sailing", NULL, NULL);
     if (!window) {
         printf("Could not init GLFW window\n");
         exit(-1);
