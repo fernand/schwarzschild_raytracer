@@ -294,15 +294,5 @@ void main() {
         glfwPollEvents();
     }
 
-    glDisableVertexAttribArray(0);
-    glDeleteFramebuffers(1, &fboId);
-    glDeleteTextures(1, &outputTextureId);
-    glDeleteTextures(1, &skyMapTextureId);
-    glDeleteShader(shaderId);
-    glDeleteProgram(programId);
-    glDeleteShader(vsShaderId);
-    glDeleteShader(fsShaderId);
-    glDeleteProgram(laserProgramId);
     glfwTerminate();
-    free(trail);
 }
