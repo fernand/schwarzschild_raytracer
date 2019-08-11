@@ -17,6 +17,7 @@
 
 #define NX 1920
 #define NY 1024
+#define TRAIL_LEN 10000
 
 const int max_iter = 10000;
 const float step = 0.01f;
@@ -192,13 +193,18 @@ void main() {
     GLuint vaoId;
     glGenVertexArrays(1, &vaoId);
     glBindVertexArray(vaoId);
-    float *trail = calloc(3*10000*sizeof(float), sizeof(float));
+    v3 *trailPos = calloc(TRAIL_LEN*sizeof(v3), sizeof(v3));
+    v3 *trailView = calloc(TRAIL_LEN*sizeof(v3), sizeof(v3));
 
     // Find the correct first point depending on the camera.
     v3 laserP = cP;
     v3 laserVelocity = cFront;
+    v3 laserAccel;
+    float sqrNorm;
     v3 laserCrossed = crossV3(laserP, laserVelocity);
     float laserH2 = dotV3(laserCrossed, laserCrossed);
+    memcpy(trailPos, &laserP, sizeof(v3));
+    int trailNumPoints = 1;
 
     const float f = 1.0f / shaderData.halfHeight;
     const float zFar = 100.0f, zNear = 0.1f;
@@ -206,13 +212,12 @@ void main() {
     v3 laserPCam = lookAt(cP, u, v, w, laserP);
     laserPCam = perspective(f, aspect, zNear, zFar, laserPCam);
 
-    memcpy(trail, &laserPCam, sizeof(laserPCam));
-    GLint trailNumPoints = 1;
+    memcpy(trailView, &laserPCam, sizeof(v3));
 
     GLuint vboId;
     glGenBuffers(1, &vboId);
     glBindBuffer(GL_ARRAY_BUFFER, vboId);
-    glBufferData(GL_ARRAY_BUFFER, 3*10000*sizeof(float), trail, GL_STREAM_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 3*TRAIL_LEN*sizeof(float), trailView, GL_STREAM_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
@@ -220,27 +225,26 @@ void main() {
     GLuint fsShaderId = shaderFromSource("laserFs", GL_FRAGMENT_SHADER, "shaders/laser.fs");
     GLuint laserProgramId = shaderProgramFromShaders(vsShaderId, fsShaderId);
 
-    //while(!glfwWindowShouldClose(window)) {
-    for (int a=0; a<10000; a++) {
+    while(!glfwWindowShouldClose(window)) {
         actOnInput(window, &shaderData);
 
         if (trailNumPoints < 3 * 9900) {
             for (int i=0; i<4; i++) {
                 laserP = addV3(laserP, mulV3(step, laserVelocity));
-                float sqrNorm = dotV3(laserP, laserP);
-                v3 laserAccel = mulV3(potentialCoef * laserH2 / powf(sqrNorm, 2.5), laserP);
+                sqrNorm = dotV3(laserP, laserP);
+                laserAccel = mulV3(potentialCoef * laserH2 / powf(sqrNorm, 2.5), laserP);
                 laserVelocity = addV3(laserVelocity, mulV3(step, laserAccel));
-
-                laserPCam = lookAt(cP, u, v, w, laserP);
-                laserPCam = perspective(f, aspect, zNear, zFar, laserPCam);
-
-                memcpy(&trail[3*trailNumPoints], &laserPCam, sizeof(laserPCam));
-                trailNumPoints++;
+                trailPos[trailNumPoints++] = laserP;
             }
         }
 
+        for (int i=0; i<trailNumPoints; i++) {
+            laserPCam = lookAt(cP, u, v, w, trailPos[i]);
+            trailView[i] = perspective(f, aspect, zNear, zFar, laserPCam);
+        }
+
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(shaderData), &shaderData);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float)*3*trailNumPoints, trail);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float)*3*trailNumPoints, trailView);
 
         glClear(GL_COLOR_BUFFER_BIT);
 

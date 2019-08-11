@@ -1,10 +1,7 @@
 #define TOLERANCE 0.0001f
 
-typedef union {
-    struct {
-        float x, y, z;
-    };
-    float e[3];
+typedef struct {
+    float x, y, z;
 } v3;
 
 static inline v3 newV3(float x, float y, float z) {
@@ -85,11 +82,8 @@ static inline v3 perspective(float f, float aspect, float zNear, float zFar, v3 
     return result;
 }
 
-typedef union {
-    struct {
-        float x, y, z, w;
-    };
-    float e[4];
+typedef struct {
+    float x, y, z, w;
 } v4;
 
 static inline v4 fromV3(v3 v) {
