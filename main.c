@@ -201,16 +201,15 @@ void main() {
     v3 laserVelocity = cFront;
     v3 laserCrossed = crossV3(laserP, laserVelocity);
     float laserH2 = dotV3(laserCrossed, laserCrossed);
-    memcpy(trailPos, &laserP, sizeof(v3));
+    trailPos[0] = laserP;
     int trailNumPoints = 1;
 
     const float f = 1.0f / shaderData.halfHeight;
     const float zFar = 100.0f, zNear = 0.1f;
     const float aspect = (float)NX / NY;
-    v3 laserPCam = lookAt(cP, u, v, w, laserP);
-    laserPCam = perspective(f, aspect, zNear, zFar, laserPCam);
-
-    memcpy(trailView, &laserPCam, sizeof(v3));
+    v3 laserPView = lookAt(cP, u, v, w, laserP);
+    laserPView = perspective(f, aspect, zNear, zFar, laserPView);
+    trailView[0] = laserPView;
 
     GLuint vboId;
     glGenBuffers(1, &vboId);
@@ -236,8 +235,8 @@ void main() {
         }
 
         for (int i=0; i<trailNumPoints; i++) {
-            laserPCam = lookAt(cP, u, v, w, trailPos[i]);
-            trailView[i] = perspective(f, aspect, zNear, zFar, laserPCam);
+            laserPView = lookAt(cP, u, v, w, trailPos[i]);
+            trailView[i] = perspective(f, aspect, zNear, zFar, laserPView);
         }
 
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(shaderData), &shaderData);
