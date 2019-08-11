@@ -199,8 +199,6 @@ void main() {
     // Find the correct first point depending on the camera.
     v3 laserP = cP;
     v3 laserVelocity = cFront;
-    v3 laserAccel;
-    float sqrNorm;
     v3 laserCrossed = crossV3(laserP, laserVelocity);
     float laserH2 = dotV3(laserCrossed, laserCrossed);
     memcpy(trailPos, &laserP, sizeof(v3));
@@ -231,8 +229,7 @@ void main() {
         if (trailNumPoints < 3 * 9900) {
             for (int i=0; i<4; i++) {
                 laserP = addV3(laserP, mulV3(step, laserVelocity));
-                sqrNorm = dotV3(laserP, laserP);
-                laserAccel = mulV3(potentialCoef * laserH2 / powf(sqrNorm, 2.5), laserP);
+                v3 laserAccel = mulV3(potentialCoef * laserH2 / powf(dotV3(laserP, laserP), 2.5), laserP);
                 laserVelocity = addV3(laserVelocity, mulV3(step, laserAccel));
                 trailPos[trailNumPoints++] = laserP;
             }
