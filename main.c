@@ -173,8 +173,8 @@ void main() {
 
     stbi_image_free(skyMap);
 
-    GLuint shaderId = shaderFromSource("rayTracer", GL_COMPUTE_SHADER, "shaders/compute.glsl");
-    GLuint programId = shaderProgramFromShader(shaderId);
+    GLuint computeShaderId = shaderFromSource("rayTracer", GL_COMPUTE_SHADER, "shaders/compute.glsl");
+    GLuint computeProgramId = shaderProgramFromShader(computeShaderId);
 
     ShaderData shaderData = initShaderData(NX, NY, xSkyMap, ySkyMap);
 
@@ -184,7 +184,6 @@ void main() {
     glGenBuffers(1, &ssboId);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboId);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(shaderData), &shaderData, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssboLocation, ssboId);
 
     GLuint fboId;
@@ -280,13 +279,13 @@ void main() {
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float)*3*trailNumPoints, trail);
 
         glClear(GL_COLOR_BUFFER_BIT);
-        glUseProgram(programId);
+
+        glUseProgram(computeProgramId);
         glDispatchCompute(NX/32, NY/32, 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         glBlitFramebuffer(0, 0, NX, NY, 0, 0, NX, NY, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         
         glUseProgram(laserProgramId);
-        glBindVertexArray(vaoId);
         glDrawArrays(GL_LINE_STRIP, 0, trailNumPoints);
 
         glfwSwapBuffers(window);
