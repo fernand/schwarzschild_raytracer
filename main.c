@@ -3,8 +3,6 @@
 #include "include/GLFW/glfw3.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "include/stb_image.h"
-#define HANDMADE_MATH_IMPLEMENTATION
-#include "include/HandmadeMath.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -202,28 +200,11 @@ void main() {
     v3 laserCrossed = crossV3(laserP, laserVelocity);
     float laserH2 = dotV3(laserCrossed, laserCrossed);
 
-    v3 laserPCam;
-    laserPCam.x = u.x * laserP.x + u.y * laserP.y + u.z * laserP.z -dotV3(u, cP);
-    laserPCam.y = v.x * laserP.x + v.y * laserP.y + v.z * laserP.z -dotV3(v, cP);
-    laserPCam.z = w.x * laserP.x + w.y * laserP.y + w.z * laserP.z -dotV3(w, cP);
     const float f = 1.0f / shaderData.halfHeight;
     const float zFar = 100.0f, zNear = 0.1f;
     const float aspect = (float)NX / NY;
-    laserPCam.x = (f / aspect) * laserPCam.x / laserPCam.z;
-    laserPCam.y = f * laserPCam.y / laserPCam.z;
-    laserPCam.z = ((zFar+zNear)/(zNear-zFar) * laserPCam.z + (2*zFar*zNear)/(zNear-zFar)) / laserPCam.z;
-
-    hmm_v4 laserPCam2 = HMM_Vec4(laserP.x, laserP.y, laserP.z, 1.0f);
-    v3 posPlusFront = addV3(cP, cFront);
-    hmm_mat4 lookAt = HMM_LookAt(HMM_Vec3(cP.x, cP.y, cP.z), HMM_Vec3(posPlusFront.x, posPlusFront.y, posPlusFront.z), HMM_Vec3(wUp.x, wUp.y, wUp.z));
-    laserPCam2 = HMM_MultiplyMat4ByVec4(lookAt, laserPCam2);
-    hmm_mat4 perspective = HMM_Perspective(fovy, aspect, zNear, zFar);
-    laserPCam2 = HMM_MultiplyMat4ByVec4(perspective, laserPCam2);
-    laserPCam2 = HMM_MultiplyVec4f(laserPCam2, laserPCam2.W);
-
-    laserPCam.x = laserPCam2.X;
-    laserPCam.y = laserPCam2.Y;
-    laserPCam.z = laserPCam2.Z;
+    v3 laserPCam = lookAt(cP, u, v, w, laserP);
+    laserPCam = perspective(f, aspect, zNear, zFar, laserPCam);
 
     memcpy(trail, &laserPCam, sizeof(laserPCam));
     GLint trailNumPoints = 1;
@@ -249,24 +230,9 @@ void main() {
                 float sqrNorm = dotV3(laserP, laserP);
                 v3 laserAccel = mulV3(potentialCoef * laserH2 / powf(sqrNorm, 2.5), laserP);
                 laserVelocity = addV3(laserVelocity, mulV3(step, laserAccel));
-                // view matrix
-                laserPCam.x = u.x * laserP.x + u.y * laserP.y + u.z * laserP.z -dotV3(u, cP);
-                laserPCam.y = v.x * laserP.x + v.y * laserP.y + v.z * laserP.z -dotV3(v, cP);
-                laserPCam.z = w.x * laserP.x + w.y * laserP.y + w.z * laserP.z -dotV3(w, cP);
-                // perspective projection
-                laserPCam.x = (f / aspect) * laserPCam.x / laserPCam.z;
-                laserPCam.y = f * laserPCam.y / laserPCam.z;
-                laserPCam.z = ((zFar+zNear)/(zNear-zFar) * laserPCam.z + (2*zFar*zNear)/(zNear-zFar))/laserPCam.z;
-                laserPCam2 = HMM_Vec4(laserP.x, laserP.y, laserP.z, 1.0f);
-                posPlusFront = addV3(cP, cFront);
-                lookAt = HMM_LookAt(HMM_Vec3(cP.x, cP.y, cP.z), HMM_Vec3(posPlusFront.x, posPlusFront.y, posPlusFront.z), HMM_Vec3(wUp.x, wUp.y, wUp.z));
-                laserPCam2 = HMM_MultiplyMat4ByVec4(lookAt, laserPCam2);
-                laserPCam2 = HMM_MultiplyMat4ByVec4(perspective, laserPCam2);
-                laserPCam2 = HMM_MultiplyVec4f(laserPCam2, 1.0f / laserPCam2.W);
 
-                laserPCam.x = laserPCam2.X;
-                laserPCam.y = laserPCam2.Y;
-                laserPCam.z = laserPCam2.Z;
+                laserPCam = lookAt(cP, u, v, w, laserP);
+                laserPCam = perspective(f, aspect, zNear, zFar, laserPCam);
 
                 memcpy(&trail[3*trailNumPoints], &laserPCam, sizeof(laserPCam));
                 trailNumPoints++;

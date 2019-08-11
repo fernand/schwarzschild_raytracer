@@ -60,6 +60,22 @@ static inline v3 normalizeV3(v3 v) {
     return result;
 }
 
+static inline v3 lookAt(v3 cP, v3 u, v3 v, v3 w, v3 p) {
+    v3 result;
+    result.x = u.x * p.x + u.y * p.y + u.z * p.z -dotV3(u, cP);
+    result.y = v.x * p.x + v.y * p.y + v.z * p.z -dotV3(v, cP);
+    result.z = w.x * p.x + w.y * p.y + w.z * p.z -dotV3(w, cP);
+    return result;
+}
+
+static inline v3 perspective(float f, float aspect, float zNear, float zFar, v3 p) {
+    v3 result;
+    result.x = (f / aspect) * p.x / p.z;
+    result.y = f * p.y / p.z;
+    result.z = ((zFar+zNear)/(zNear-zFar) * p.z + (2*zFar*zNear)/(zNear-zFar)) / p.z;
+    return result;
+}
+
 typedef union {
     struct {
         float x, y, z, w;
