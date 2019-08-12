@@ -202,7 +202,7 @@ void main() {
     v3 laserCrossed = crossV3(laserP, laserVelocity);
     float laserH2 = dotV3(laserCrossed, laserCrossed);
     float sqrNorm = dotV3(laserP, laserP);
-    float coef = 1.0f - 1.0f / sqrNorm;
+    float coef = 1.0f - 1.0f / sqrtf(sqrNorm);
     trailPos[0] = laserP;
     int trailNumPoints = 1;
 
@@ -228,16 +228,13 @@ void main() {
         actOnInput(window, &shaderData);
 
         if (sqrNorm > 1.0f && sqrNorm < skyR2 && trailNumPoints < TRAIL_LEN) {
-            int numIter = (int)(100.0f * coef);
-            for (int i=0; i<numIter; i++) {
-                coef = 1.0f - 1.0f / sqrNorm;
-                float step = 0.01f * coef;
-                laserP = addV3(laserP, mulV3(step, laserVelocity));
-                sqrNorm = dotV3(laserP, laserP);
-                v3 laserAccel = mulV3(potentialCoef * laserH2 / powf(sqrNorm, 2.5), laserP);
-                laserVelocity = addV3(laserVelocity, mulV3(step, laserAccel));
-                trailPos[trailNumPoints++] = laserP;
-            }
+            coef = 1.0f - 1.0f / sqrtf(sqrNorm);
+            float step = 0.05f * coef;
+            laserP = addV3(laserP, mulV3(step, laserVelocity));
+            sqrNorm = dotV3(laserP, laserP);
+            v3 laserAccel = mulV3(potentialCoef * laserH2 / powf(sqrNorm, 2.5), laserP);
+            laserVelocity = addV3(laserVelocity, mulV3(step, laserAccel));
+            trailPos[trailNumPoints++] = laserP;
         }
 
         for (int i=0; i<trailNumPoints; i++) {
