@@ -18,9 +18,9 @@
 #define NX 1920
 #define NY 1024
 #define TRAIL_LEN 10000
+const float skyR2 = 30.0f * 30.0f;
 
 const int max_iter = 10000;
-const float step = 0.01f;
 const float potentialCoef = -1.5f;
 
 const float oneRadian = PI / 180.0f;
@@ -201,6 +201,8 @@ void main() {
     v3 laserVelocity = cFront;
     v3 laserCrossed = crossV3(laserP, laserVelocity);
     float laserH2 = dotV3(laserCrossed, laserCrossed);
+    float sqrNorm = dotV3(laserP, laserP);
+    float coef = 1.0f - 1.0f / sqrNorm;
     trailPos[0] = laserP;
     int trailNumPoints = 1;
 
@@ -225,10 +227,14 @@ void main() {
     while(!glfwWindowShouldClose(window)) {
         actOnInput(window, &shaderData);
 
-        if (trailNumPoints < TRAIL_LEN) {
-            for (int i=0; i<4; i++) {
+        if (sqrNorm > 1.0f && sqrNorm < skyR2 && trailNumPoints < TRAIL_LEN) {
+            int numIter = (int)(100.0f * coef);
+            for (int i=0; i<numIter; i++) {
+                coef = 1.0f - 1.0f / sqrNorm;
+                float step = 0.01f * coef;
                 laserP = addV3(laserP, mulV3(step, laserVelocity));
-                v3 laserAccel = mulV3(potentialCoef * laserH2 / powf(dotV3(laserP, laserP), 2.5), laserP);
+                sqrNorm = dotV3(laserP, laserP);
+                v3 laserAccel = mulV3(potentialCoef * laserH2 / powf(sqrNorm, 2.5), laserP);
                 laserVelocity = addV3(laserVelocity, mulV3(step, laserAccel));
                 trailPos[trailNumPoints++] = laserP;
             }

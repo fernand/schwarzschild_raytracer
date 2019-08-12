@@ -69,6 +69,7 @@ static inline v3 lookAt(v3 cP, v3 u, v3 v, v3 w, v3 p) {
 
 static inline v3 perspective(float f, float aspect, float zNear, float zFar, v3 p) {
     v3 result;
+    // TODO: not sure if this is correct.
     if (fabsf(p.z) < TOLERANCE) {
         result.x = (f / aspect) * p.x;
         result.y = f * p.y;
