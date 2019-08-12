@@ -17,10 +17,9 @@
 
 #define NX 1920
 #define NY 1024
-#define TRAIL_LEN 10000
+#define TRAIL_LEN 1000
 const float skyR2 = 30.0f * 30.0f;
 
-const int max_iter = 10000;
 const float potentialCoef = -1.5f;
 
 const float oneRadian = PI / 180.0f;
@@ -228,7 +227,7 @@ void main() {
 
         if (sqrNorm > 1.0f && sqrNorm < skyR2 && trailNumPoints < TRAIL_LEN) {
             coef = 1.0f - 1.0f / sqrtf(sqrNorm);
-            float step = 0.05f * coef;
+            float step = 0.1f * coef;
             laserP = addV3(laserP, mulV3(step, laserVelocity));
             sqrNorm = dotV3(laserP, laserP);
             v3 laserAccel = mulV3(potentialCoef * laserH2 / powf(sqrNorm, 2.5), laserP);
