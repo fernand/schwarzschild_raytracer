@@ -210,8 +210,7 @@ void main() {
     const float zFar = 100.0f, zNear = 0.1f;
     const float aspect = (float)NX / NY;
     v3 laserPView = lookAt(cP, u, v, w, laserP);
-    laserPView = perspective(f, aspect, zNear, zFar, laserPView);
-    trailView[0] = laserPView;
+    trailView[0] = perspective(f, aspect, zNear, zFar, laserPView);
 
     GLuint vboId;
     glGenBuffers(1, &vboId);
