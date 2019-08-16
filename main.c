@@ -225,7 +225,7 @@ void main() {
     while(!glfwWindowShouldClose(window)) {
         actOnInput(window, &shaderData);
 
-        if (sqrNorm > 1.0f && sqrNorm < skyR2 && trailNumPoints < TRAIL_LEN) {
+        if (sqrNorm > 2.6f * 2.6f && sqrNorm < skyR2 && trailNumPoints < TRAIL_LEN) {
             coef = 1.0f - 1.0f / sqrtf(sqrNorm);
             float step = 0.1f * coef;
             laserP = addV3(laserP, mulV3(step, laserVelocity));
