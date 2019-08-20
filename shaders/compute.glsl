@@ -19,10 +19,20 @@ const int NUM_ITER = 50;
 const float STEP = 0.2;
 const float POTENTIAL_COEF = -1.5;
 const float SKY_R2 = 30.0 * 30.0;
-const float D_INNER_R = 2.6;
+const float D_INNER_R = 3.1;
 const float D_INNER_R2 = D_INNER_R * D_INNER_R;
 const float D_OUTER_R = 14.0;
 const float D_OUTER_R2 = D_OUTER_R * D_OUTER_R;
+
+bool hasCrossedAccretion(vec3 rayPos, vec3 rayDir, float rayDist) {
+    if (abs(rayDir.y) < 1.0e-5) return false;
+    float dist = -rayPos.y / rayDir.y;
+    if (dist < 0.0 || dist >= rayDist) return false;
+    vec3 pos = rayPos + dist * rayDir;
+    float rho = length(pos);
+    if (rho < D_INNER_R || rho > D_OUTER_R) return false;
+    return true;
+}
 
 void main() {
     vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
@@ -42,36 +52,40 @@ void main() {
 
     vec3 point = origin;
     vec3 nextPoint;
-    float pointDist, pointDistNext, potential;
+    float pointDist, pointDistNext, potential, pointRDist;
     bool crossedAccretion = false;
     bool hitSky = true;
 
     for (int i=0; i<NUM_ITER; i++) {
         pointDist = length(point);
-        potential = -0.033 / (pointDist * pointDist);
+        pointRDist = pointDist - 1.0;
+        potential = -0.033 / (pointRDist * pointRDist);
         direction = normalize(STEP * direction + point * potential);
-        nextPoint = point + STEP * pointDist * direction;
+        pointDist *= STEP;
+        nextPoint = point + pointDist * direction;
         pointDistNext = length(nextPoint);
 
-        if (pointDistNext <= 1. && pointDist > 1.0) {
+        if (pointDistNext <= 1.) {
             if (crossedAccretion) {
                 color = mix(vec4(0.0, 0.0, 0.0, 1.0), color, color.a);
             }
             hitSky = false;
             break;
 //#if 0
-        } else if (nextPoint.z >= -10. && nextPoint.z <= -9. && abs(nextPoint.x + 2.) <= 1. && abs(nextPoint.y + 2.) <= 1.) {
+        } else if (length(nextPoint - vec3(-2., -2., 9.5)) < 0.7) {
             //color = mix(vec4(1.0, 0.0, 0.0, 1.0), color, color.a);
             color = vec4(1.0, 0.0, 0.0, 1.0);
             // TODO: Should we break here?
+            hitSky = false;
             break;
-        } else if (pointDistNext >= D_INNER_R2 && pointDistNext <= D_OUTER_R2 && ((point.y > 0. && nextPoint.y < 0.) || (point.y < 0. && nextPoint.y > 0.))) {
+#if 0
+        } else if (hasCrossedAccretion(point, direction, pointDist)) {
             if (!crossedAccretion) {
                 color = vec4(1.0, 1.0, 0.98, 0.0);
             }
             crossedAccretion = true;
             color.a += sin(PI * pow(((D_OUTER_R - sqrt(pointDistNext)) / (D_OUTER_R - D_INNER_R)), 2));
-//#endif
+#endif
         }
         point = nextPoint;
     }

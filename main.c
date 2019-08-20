@@ -249,8 +249,8 @@ void main() {
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         glBlitFramebuffer(0, 0, NX, NY, 0, 0, NX, NY, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         
-        glUseProgram(laserProgramId);
-        glDrawArrays(GL_LINE_STRIP, 0, trailNumPoints);
+        //glUseProgram(laserProgramId);
+        //glDrawArrays(GL_LINE_STRIP, 0, trailNumPoints);
 
         glfwSwapBuffers(window);
 
