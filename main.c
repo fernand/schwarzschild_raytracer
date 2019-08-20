@@ -135,7 +135,6 @@ void main() {
         printf("Could not init OpenGL context\n");
         exit(-1);
     }
-
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     if (glfwRawMouseMotionSupported()) {
         glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);

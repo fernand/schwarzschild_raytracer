@@ -15,8 +15,8 @@ layout(std430, binding = 0) readonly buffer data
 };
 
 const float PI = 3.1415926535897932384626433832795;
-const int NUM_ITER = 10000;
-const float STEP = 0.16;
+const int NUM_ITER = 50;
+const float STEP = 0.2;
 const float POTENTIAL_COEF = -1.5;
 const float SKY_R2 = 30.0 * 30.0;
 const float D_INNER_R = 2.6;
@@ -40,55 +40,53 @@ void main() {
 
     vec3 direction = lowerLeftCorner + s * horizontal + t * vertical - origin;
 
-    vec3 velocity = direction;
     vec3 point = origin;
-    vec3 prevPoint;
-    float prevSqrNorm;
-    float sqrNorm = dot(point, point);
-    vec3 crossed = cross(point, velocity);
-    float h2 = dot(crossed, crossed);
+    vec3 nextPoint;
+    float pointDist, pointDistNext, potential;
     bool crossedAccretion = false;
+    bool hitSky = true;
 
     for (int i=0; i<NUM_ITER; i++) {
-        prevPoint = point;
-        prevSqrNorm = sqrNorm;
-        point += velocity * STEP;
-        sqrNorm = dot(point, point);
-        vec3 accel = POTENTIAL_COEF * h2 * point / pow(sqrNorm, 2.5);
-        velocity += accel * STEP;
+        pointDist = length(point);
+        potential = -0.033 / (pointDist * pointDist);
+        direction = normalize(STEP * direction + point * potential);
+        nextPoint = point + STEP * pointDist * direction;
+        pointDistNext = length(nextPoint);
 
-        if (sqrNorm > SKY_R2) {
-            float theta = acos(point.z / length(point));
-            float phi = atan(point.y, point.x);
-            int u = int((phi / (2*PI)) * xSkyMap);
-            int v = int((theta / PI) * ySkyMap);
-            if (u < 0) { u = u + xSkyMap; }
-            if (v < 0) { v = v + ySkyMap; }
-            if (crossedAccretion) {
-                color = mix(imageLoad(skyMap, ivec2(u, v)), color, color.a);
-            } else {
-                color = imageLoad(skyMap, ivec2(u, v));
-            }
-            break;
-        } else if (sqrNorm < 1. && prevSqrNorm > 1.) {
+        if (pointDistNext <= 1. && pointDist > 1.0) {
             if (crossedAccretion) {
                 color = mix(vec4(0.0, 0.0, 0.0, 1.0), color, color.a);
             }
+            hitSky = false;
             break;
-#if 0
-        } else if (point.z >= -10. && point.z <= -9. && abs(point.x + 2.) <= 1. && abs(point.y + 2.) <= 1.) {
+//#if 0
+        } else if (nextPoint.z >= -10. && nextPoint.z <= -9. && abs(nextPoint.x + 2.) <= 1. && abs(nextPoint.y + 2.) <= 1.) {
             //color = mix(vec4(1.0, 0.0, 0.0, 1.0), color, color.a);
             color = vec4(1.0, 0.0, 0.0, 1.0);
             // TODO: Should we break here?
             break;
-        } else if (sqrNorm >= D_INNER_R2 && sqrNorm <= D_OUTER_R2 && ((prevPoint.y > 0. && point.y < 0.) || (prevPoint.y < 0. && point.y > 0.))) {
+        } else if (pointDistNext >= D_INNER_R2 && pointDistNext <= D_OUTER_R2 && ((point.y > 0. && nextPoint.y < 0.) || (point.y < 0. && nextPoint.y > 0.))) {
             if (!crossedAccretion) {
                 color = vec4(1.0, 1.0, 0.98, 0.0);
             }
             crossedAccretion = true;
-            color.a += sin(PI * pow(((D_OUTER_R - sqrt(sqrNorm)) / (D_OUTER_R - D_INNER_R)), 2));
-#endif
+            color.a += sin(PI * pow(((D_OUTER_R - sqrt(pointDistNext)) / (D_OUTER_R - D_INNER_R)), 2));
+//#endif
         }
+        point = nextPoint;
     }
+    if (hitSky) {
+        float theta = acos(point.z / length(point));
+        float phi = atan(point.y, point.x);
+        int u = int((phi / (2*PI)) * xSkyMap);
+        int v = int((theta / PI) * ySkyMap);
+        if (u < 0) { u = u + xSkyMap; }
+        if (v < 0) { v = v + ySkyMap; }
+        if (crossedAccretion) {
+            color = mix(imageLoad(skyMap, ivec2(u, v)), color, color.a);
+        } else {
+            color = imageLoad(skyMap, ivec2(u, v));
+        }
+   }
     imageStore(pixels, ivec2(gl_GlobalInvocationID.xy), color);
 }
