@@ -75,19 +75,12 @@ void main() {
                 color = mix(vec4(0.0, 0.0, 0.0, 1.0), color, color.a);
             }
             break;
-#if 0
-        } else if (point.z >= -10. && point.z <= -9. && abs(point.x + 2.) <= 1. && abs(point.y + 2.) <= 1.) {
-            //color = mix(vec4(1.0, 0.0, 0.0, 1.0), color, color.a);
-            color = vec4(1.0, 0.0, 0.0, 1.0);
-            // TODO: Should we break here?
-            break;
         } else if (sqrNorm >= D_INNER_R2 && sqrNorm <= D_OUTER_R2 && ((prevPoint.y > 0. && point.y < 0.) || (prevPoint.y < 0. && point.y > 0.))) {
             if (!crossedAccretion) {
                 color = vec4(1.0, 1.0, 0.98, 0.0);
             }
             crossedAccretion = true;
             color.a += sin(PI * pow(((D_OUTER_R - sqrt(sqrNorm)) / (D_OUTER_R - D_INNER_R)), 2));
-#endif
         }
     }
     imageStore(pixels, ivec2(gl_GlobalInvocationID.xy), color);
